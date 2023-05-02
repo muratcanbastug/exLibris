@@ -68,3 +68,33 @@ router.post("/add-user-account", async (req, res) => {
       .json({ error: "An error occurred while adding the user account." });
   }
 });
+
+// Ban an user
+router.post("/ban-user", async (req, res) => {
+  const { user_id, admin_id, report } = req.body;
+  try {
+    // Check if user with the given id_number is already banned
+    const { rows: existingRows } = await db.query(
+      "SELECT user_id FROM banned_user WHERE user_id = $1",
+      [user_id]
+    );
+
+    if (existingRows.length > 0) {
+      // User is already banned
+      res.status(409).json({
+        error: "User is already banned.",
+      });
+    } else {
+      await db.query(
+        "CALL add_banned_user($1::INTEGER, $2::INTEGER, $3::VARCHAR)",
+        [user_id, admin_id, report]
+      );
+      res.status(200).json({ user_id: user_id });
+    }
+  } catch (err) {
+    console.error(err);
+    res
+      .status(500)
+      .json({ error: "An error occurred while banning the user." });
+  }
+});
