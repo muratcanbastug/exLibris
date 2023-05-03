@@ -88,6 +88,25 @@ router.patch("/:id", async (req, res) => {
   }
 });
 
+// Reset user password
+router.patch("/:id/reset-password", async (req, res) => {
+  const { id } = req.params;
+  const { new_password } = req.body;
+  try {
+    const hashedPassword = await bcrypt.hash("123", 10);
+    await db.query(
+      "UPDATE user_account SET password = $1::VARCHAR WHERE user_id = $2::INTEGER",
+      [hashedPassword, id]
+    );
+    res.status(200).json({ result: "User password updated successfully." });
+  } catch (err) {
+    console.error(err);
+    res
+      .status(500)
+      .json({ error: "An error occurred while updating the password." });
+  }
+});
+
 // Ban an user
 router.post("/:id/ban", async (req, res) => {
   const { id } = req.params;
