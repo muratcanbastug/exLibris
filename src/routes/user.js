@@ -14,6 +14,15 @@ router.get("/:id", async (req, res) => {
   res.status(200).json(rows[0]);
 });
 
+// Get all users information
+router.get("/", async (req, res) => {
+  const { rows } = await db.query(
+    "SELECT * FROM user_all_information ORDER BY user_id",
+    []
+  );
+  res.status(200).json(rows);
+});
+
 // Add new user
 router.post("/", async (req, res) => {
   const {
