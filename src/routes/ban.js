@@ -36,6 +36,33 @@ router.post("/:id", async (req, res) => {
   }
 });
 
+// Unban an user
+router.delete("/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    // Check if user with the given id_number is banned
+    const { rows } = await db.query(
+      "SELECT banned FROM user_account WHERE user_id = $1",
+      [id]
+    );
+
+    if (rows[0].banned) {
+      await db.query("CALL delete_ban($1::INTEGER)", [id]);
+      res.status(200).json({ user_id: id });
+    } else {
+      // User is not banned
+      res.status(409).json({
+        error: "User is not banned.",
+      });
+    }
+  } catch (err) {
+    console.error(err);
+    res
+      .status(500)
+      .json({ error: "An error occurred while unbanning the user." });
+  }
+});
+
 // Get all banned users
 router.get("/", async (req, res) => {
   const { rows } = await db.query(
