@@ -36,12 +36,10 @@ router.post("/:id", async (req, res) => {
   }
 });
 
-// Get user's all lists
-router.get("/:id/lists", async (req, res) => {
-  const { id } = req.params;
+// Get all banned users
+router.get("/", async (req, res) => {
   const { rows } = await db.query(
-    "SELECT * FROM list WHERE user_id = $1::INTEGER",
-    [id]
+    "SELECT * FROM all_banned_users ORDER BY user_id"
   );
   res.status(200).json(rows);
 });
