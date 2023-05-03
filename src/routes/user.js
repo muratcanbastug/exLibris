@@ -15,7 +15,7 @@ router.get("/:id", async (req, res) => {
 });
 
 // Add new user
-router.post("/add-user-account", async (req, res) => {
+router.post("/", async (req, res) => {
   const {
     first_name,
     last_name,
@@ -69,14 +69,34 @@ router.post("/add-user-account", async (req, res) => {
   }
 });
 
+// Update user information
+router.patch("/:id", async (req, res) => {
+  const { id } = req.params;
+  const { first_name, last_name, email, username, phone_number, user_type_id } =
+    req.body;
+  try {
+    await db.query(
+      "CALL update_user_information($1::INTEGER, $2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR, $7::SMALLINT)",
+      [id, first_name, last_name, email, username, phone_number, user_type_id]
+    );
+    res.status(200).json({ result: "User information updated successfully." });
+  } catch (err) {
+    console.error(err);
+    res
+      .status(500)
+      .json({ error: "An error occurred while updating the user." });
+  }
+});
+
 // Ban an user
-router.post("/ban", async (req, res) => {
-  const { user_id, admin_id, report } = req.body;
+router.post("/:id/ban", async (req, res) => {
+  const { id } = req.params;
+  const { admin_id, report } = req.body;
   try {
     // Check if user with the given id_number is already banned
     const { rows } = await db.query(
       "SELECT banned FROM user_account WHERE user_id = $1",
-      [user_id]
+      [id]
     );
 
     if (rows[0].banned) {
@@ -87,9 +107,9 @@ router.post("/ban", async (req, res) => {
     } else {
       await db.query(
         "CALL add_banned_user($1::INTEGER, $2::INTEGER, $3::VARCHAR)",
-        [user_id, admin_id, report]
+        [id, admin_id, report]
       );
-      res.status(200).json({ user_id: user_id });
+      res.status(200).json({ user_id: id });
     }
   } catch (err) {
     console.error(err);
