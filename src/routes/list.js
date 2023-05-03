@@ -77,3 +77,22 @@ router.post("/:id", async (req, res) => {
     };
   }
 });
+
+// Delete item from list
+router.delete("/:id/items", async (req, res) => {
+  const { id } = req.params;
+  const { item_id } = req.body;
+
+  try {
+    await db.query(
+      "DELETE FROM item_list WHERE list_id = $1 AND item_id = $2",
+      [id, item_id]
+    );
+    res.status(200).json("The item was deleted from the list successfully.");
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      error: "An error occurred while deleting the item from the list",
+    });
+  }
+});
