@@ -2,6 +2,8 @@ const Router = require("express-promise-router");
 const bcrypt = require("bcrypt");
 const db = require("../db");
 const router = new Router();
+const MAX_LISTS = 20;
+
 module.exports = router;
 
 // Get user information
@@ -144,5 +146,37 @@ router.post("/:id/ban", async (req, res) => {
     res
       .status(500)
       .json({ error: "An error occurred while banning the user." });
+  }
+});
+
+// Get user's all lists
+router.get("/:id/lists", async (req, res) => {
+  const { id } = req.params;
+  const { rows } = await db.query(
+    "SELECT * FROM list WHERE user_id = $1::INTEGER",
+    [id]
+  );
+  res.status(200).json(rows);
+});
+
+// Add new list
+router.post("/:id/lists", async (req, res) => {
+  const { id } = req.params;
+  const { list_name } = req.body;
+  // Check if user with the given id_number already have MAX_LISTS list
+  const { rows } = await db.query(
+    "SELECT COUNT(*) FROM list WHERE user_id = $1::INTEGER",
+    [id]
+  );
+  if (rows[0].count > MAX_LISTS) {
+    res.status(409).json({
+      error: `The user with the given id_number already has ${MAX_LISTS} list`,
+    });
+  } else {
+    await db.query(
+      "INSERT INTO list (user_id, list_name) VALUES ($1::INTEGER, $2::VARCHAR)",
+      [id, list_name]
+    );
+    res.status(200).json("List has been created.");
   }
 });
