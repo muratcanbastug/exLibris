@@ -13,7 +13,7 @@ router.get("/:id", async (req, res) => {
   res.status(200).json(rows);
 });
 
-// delete list
+// Delete list
 router.delete("/:id", async (req, res) => {
   const { id } = req.params;
   try {
@@ -22,6 +22,30 @@ router.delete("/:id", async (req, res) => {
   } catch {
     (err) => {
       console.log(err);
+      res
+        .status(500)
+        .json({ error: "An error occurred while deleting the list." });
+    };
+  }
+});
+
+// Update list name
+router.patch("/:id", async (req, res) => {
+  const { id } = req.params;
+  const { new_name } = req.body;
+  console.log(new_name);
+  try {
+    await db.query(
+      "UPDATE list SET list_name = $1::VARCHAR WHERE list_id = $2::INTEGER",
+      [new_name, id]
+    );
+    res.status(200).json("The list name was updated successfully.");
+  } catch {
+    (err) => {
+      console.log(err);
+      res
+        .status(500)
+        .json({ error: "An error occurred while updating the list name." });
     };
   }
 });
