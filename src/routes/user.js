@@ -69,25 +69,6 @@ router.post("/", async (req, res) => {
   }
 });
 
-// Update user information
-router.patch("/:id", async (req, res) => {
-  const { id } = req.params;
-  const { first_name, last_name, email, username, phone_number, user_type_id } =
-    req.body;
-  try {
-    await db.query(
-      "CALL update_user_information($1::INTEGER, $2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR, $7::SMALLINT)",
-      [id, first_name, last_name, email, username, phone_number, user_type_id]
-    );
-    res.status(200).json({ result: "User information updated successfully." });
-  } catch (err) {
-    console.error(err);
-    res
-      .status(500)
-      .json({ error: "An error occurred while updating the user." });
-  }
-});
-
 // Ban an user
 router.post("/:id/ban", async (req, res) => {
   const { id } = req.params;
