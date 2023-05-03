@@ -70,16 +70,16 @@ router.post("/add-user-account", async (req, res) => {
 });
 
 // Ban an user
-router.post("/ban-user", async (req, res) => {
+router.post("/ban", async (req, res) => {
   const { user_id, admin_id, report } = req.body;
   try {
     // Check if user with the given id_number is already banned
-    const { rows: existingRows } = await db.query(
-      "SELECT user_id FROM banned_user WHERE user_id = $1",
+    const { rows } = await db.query(
+      "SELECT banned FROM user_account WHERE user_id = $1",
       [user_id]
     );
 
-    if (existingRows.length > 0) {
+    if (rows[0].banned) {
       // User is already banned
       res.status(409).json({
         error: "User is already banned.",
