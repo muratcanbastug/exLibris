@@ -55,3 +55,21 @@ router.post("/", async (req, res) => {
   }
 });
 
+// Delete the user type
+router.delete("/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    await db.query("CALL delete_user_type($1)", [id]);
+    res.status(200).json("The user type was successfully deleted.");
+  } catch {
+    (err) => {
+      console.error(err);
+      res.status(500).json("An error occurred while deleting the user type");
+    };
+  }
+  res
+    .status(409)
+    .json(
+      "The user type could not be deleted. Because there are users with the given user type."
+    );
+});
