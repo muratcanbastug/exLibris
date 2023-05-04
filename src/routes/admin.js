@@ -66,7 +66,10 @@ router.patch("/:id", async (req, res) => {
     console.error(err);
     res
       .status(500)
-      .json({ error: "An error occurred while updating the user." });
+      .json({ error: "An error occurred while updating the admin." });
+  }
+});
+
 // Reset admin password
 router.patch("/:id/reset-password", async (req, res) => {
   const { id } = req.params;
