@@ -104,7 +104,7 @@ router.patch("/:id/reset-password", async (req, res) => {
   const { id } = req.params;
   const { new_password } = req.body;
   try {
-    const hashedPassword = await bcrypt.hash("123", 10);
+    const hashedPassword = await bcrypt.hash(new_password, 10);
     await db.query(
       "UPDATE user_account SET password = $1::VARCHAR WHERE user_id = $2::INTEGER",
       [hashedPassword, id]
