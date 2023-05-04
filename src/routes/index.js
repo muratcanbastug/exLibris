@@ -6,6 +6,7 @@ const returns = require("./return");
 const genres = require("./genre");
 const shelves = require("./shelf");
 const branches = require("./branch");
+const admins = require("./admin");
 
 module.exports = (app) => {
   app.use("/users", users);
@@ -16,4 +17,5 @@ module.exports = (app) => {
   app.use("/genres", genres);
   app.use("/shelves", shelves);
   app.use("/branches", branches);
+  app.use("/admins", admins);
 };
