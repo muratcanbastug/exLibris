@@ -54,3 +54,37 @@ router.delete("/:id", async (req, res) => {
   }
   res.status(409).json("There are items in the shelf.");
 });
+
+// Add new branch
+router.post("/:id", async (req, res) => {
+  const { id } = req.params;
+  const { branch_code } = req.body;
+  try {
+    const { rows } = await db.query(
+      "SELECT 1 FROM branch WHERE branch_code = $1",
+      [branch_code]
+    );
+    if (rows[0]) {
+      res.status(409).json({
+        error: `The branch with the given branch_code already exists`,
+      });
+    } else {
+      const { rows } = await db.query(
+        "CALL add_branch($1::VARCHAR, $2::INTEGER, $3)",
+        [branch_code, id, 1]
+      );
+      res.status(200).json({
+        message:
+          "The branch with the given branch_code was added successfully.",
+        branch_id: rows[0].p_branch_id,
+      });
+    }
+  } catch {
+    (err) => {
+      console.error(err);
+      res
+        .status(500)
+        .json({ error: "An error occurred while adding the branch." });
+    };
+  }
+});
