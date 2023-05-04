@@ -73,3 +73,39 @@ router.delete("/:id", async (req, res) => {
       "The user type could not be deleted. Because there are users with the given user type."
     );
 });
+
+// Update the user type
+router.patch("/:id", async (req, res) => {
+  const { id } = req.params;
+
+  const {
+    type_name,
+    max_extratime,
+    max_rental,
+    max_reservation_day,
+    rental_time,
+    penalty_fee,
+  } = req.body;
+  try {
+    await db.query(
+      "CALL update_user_type($1::INTEGER, $2::VARCHAR, $3::INTEGER, $4::INTEGER, $5::INTEGER, $6::INTEGER, $7::INTEGER)",
+      [
+        id,
+        type_name,
+        max_extratime,
+        max_rental,
+        max_reservation_day,
+        rental_time,
+        penalty_fee,
+      ]
+    );
+    res.status(200).json("User type was updated successfully.");
+  } catch {
+    (err) => {
+      console.error(err);
+      res
+        .status(500)
+        .json({ error: "An error occurred while updating the user type." });
+    };
+  }
+});
