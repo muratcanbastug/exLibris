@@ -4,6 +4,7 @@ const bans = require("./ban");
 const rentals = require("./rental");
 const returns = require("./return");
 const genres = require("./genre");
+const shelves = require("./shelf");
 
 module.exports = (app) => {
   app.use("/users", users);
@@ -12,4 +13,5 @@ module.exports = (app) => {
   app.use("/rentals", rentals);
   app.use("/returns", returns);
   app.use("/genres", genres);
+  app.use("/shelves", shelves);
 };
