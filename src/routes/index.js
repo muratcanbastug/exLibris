@@ -8,6 +8,7 @@ const shelves = require("./shelf");
 const branches = require("./branch");
 const admins = require("./admin");
 const userTypes = require("./userType");
+const reservations = require("./reservation");
 
 module.exports = (app) => {
   app.use("/users", users);
@@ -20,4 +21,5 @@ module.exports = (app) => {
   app.use("/branches", branches);
   app.use("/admins", admins);
   app.use("/user-types", userTypes);
+  app.use("/reservations", reservations);
 };
