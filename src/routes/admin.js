@@ -51,3 +51,21 @@ router.post("/", async (req, res) => {
       .json({ error: "An error occurred while adding the admin." });
   }
 });
+
+// Update admin information
+router.patch("/:id", async (req, res) => {
+  const { id } = req.params;
+  const { first_name, last_name, email, username, phone_number } = req.body;
+  try {
+    await db.query(
+      "CALL update_admin_information($1::INTEGER, $2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR)",
+      [id, first_name, last_name, email, username, phone_number]
+    );
+    res.status(200).json({ result: "Admin information updated successfully." });
+  } catch (err) {
+    console.error(err);
+    res
+      .status(500)
+      .json({ error: "An error occurred while updating the user." });
+  }
+});
