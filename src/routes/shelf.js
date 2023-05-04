@@ -37,3 +37,20 @@ router.post("/", async (req, res) => {
     };
   }
 });
+
+// Delete a shelf
+router.delete("/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    await db.query("CALL delete_shelf($1::INTEGER)", [id]);
+    res.status(200).json("The delete was successful.");
+  } catch {
+    (err) => {
+      console.error(err);
+      res
+        .status(500)
+        .json({ error: "An error occurred while deleting the shelf." });
+    };
+  }
+  res.status(409).json("There are items in the shelf.");
+});
