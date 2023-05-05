@@ -19,3 +19,30 @@ router.get("/:id", async (req, res) => {
   );
   res.status(200).json(rows);
 });
+
+// Add reservation
+router.post("/:id", async (req, res) => {
+  const { id } = req.params;
+  const { user_id } = req.body;
+
+  try {
+    await db.query("CALL add_reservation($1::INTEGER, $2::INTEGER)", [
+      id,
+      user_id,
+    ]);
+    res.status(200).json({ message: "Reservation added successfully" });
+  } catch {
+    (err) => {
+      console.log(err);
+      res
+        .status(500)
+        .json({ message: "An error occurred while adding reservation" });
+    };
+  }
+  res
+    .status(409)
+    .json({
+      message:
+        "Item is available to rent or already reserved or user has max item.",
+    });
+});
