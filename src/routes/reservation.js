@@ -39,12 +39,12 @@ router.post("/:id", async (req, res) => {
         .json({ message: "An error occurred while adding reservation" });
     };
   }
-  res
-    .status(409)
-    .json({
-      message:
-        "Item is available to rent or already reserved or user has max item.",
-    });
+  res.status(409).json({
+    message:
+      "Item is available to rent or already reserved or user has max item.",
+  });
+});
+
 // Delete reservation
 router.delete("/:id", async (req, res) => {
   const { id } = req.params;
