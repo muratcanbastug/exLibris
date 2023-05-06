@@ -218,3 +218,133 @@ router.patch("/:id/rate", async (req, res) => {
   }
 });
 
+// Update multimedia item
+router.patch("/:id/multimedia", async (req, res) => {
+  const { id } = req.params;
+  const {
+    item_name,
+    publication_date,
+    publisher_name,
+    language_name,
+    branch_id,
+    barcode,
+    size,
+    serie_name,
+    genre_id,
+  } = req.body;
+  try {
+    const { rows } = await db.query(
+      "CALL update_multimedia_item_information($1::INTEGER, $2::VARCHAR, $3::DATE, $4::VARCHAR, $5::VARCHAR, $6::INTEGER, $7::VARCHAR, $8::VARCHAR, $9::INTEGER, $10::INTEGER)",
+      [
+        id,
+        item_name,
+        publication_date,
+        publisher_name,
+        language_name,
+        branch_id,
+        barcode,
+        serie_name,
+        genre_id,
+        size,
+      ]
+    );
+    res.status(200).json("The item was successfully updated.");
+  } catch {
+    (err) => {
+      console.error(err);
+      res.status(500).json("An error occurred while updating item");
+    };
+  }
+});
+
+// Update periodical item
+router.patch("/:id/periodical", async (req, res) => {
+  const { id } = req.params;
+  const {
+    item_name,
+    publication_date,
+    publisher_name,
+    language_name,
+    branch_id,
+    barcode,
+    frequency,
+    volume_number,
+    seri_name,
+    genre_id,
+    living,
+  } = req.body;
+  try {
+    const { rows } = await db.query(
+      "CALL update_periodical_item_information($1::INTEGER, $2::VARCHAR, $3::DATE, $4::VARCHAR, $5::VARCHAR, $6::INTEGER, $7::VARCHAR, $8::VARCHAR, $9::INTEGER, $10::VARCHAR, $11::INTEGER, $12::BOOLEAN)",
+      [
+        id,
+        item_name,
+        publication_date,
+        publisher_name,
+        language_name,
+        branch_id,
+        barcode,
+        frequency,
+        volume_number,
+        seri_name,
+        genre_id,
+        living,
+      ]
+    );
+    res.status(200).json("The item was successfully updated.");
+  } catch {
+    (err) => {
+      console.error(err);
+      res.status(500).json("An error occurred while updating item");
+    };
+  }
+});
+
+// Update non-periodical item
+router.patch("/:id/nonperiodical", async (req, res) => {
+  const { id } = req.params;
+  const {
+    item_name,
+    publication_date,
+    publisher_name,
+    language_name,
+    branch_id,
+    barcode,
+    seri_name,
+    genre_id,
+    author_first_name,
+    author_last_name,
+    author_nationality,
+    isbn,
+    edition,
+    page_number,
+  } = req.body;
+  try {
+    const { rows } = await db.query(
+      "CALL update_nonperiodical_item_information($1::INTEGER, $2::VARCHAR, $3::DATE, $4::VARCHAR, $5::VARCHAR, $6::INTEGER, $7::VARCHAR, $8::VARCHAR, $9::INTEGER, $10::VARCHAR, $11::VARCHAR, $12::VARCHAR, $13::INTEGER, $14::INTEGER, $15::INTEGER)",
+      [
+        id,
+        item_name,
+        publication_date,
+        publisher_name,
+        language_name,
+        branch_id,
+        barcode,
+        seri_name,
+        genre_id,
+        author_first_name,
+        author_last_name,
+        author_nationality,
+        isbn,
+        edition,
+        page_number,
+      ]
+    );
+    res.status(200).json("The item was successfully updated.");
+  } catch {
+    (err) => {
+      console.error(err);
+      res.status(500).json("An error occurred while updating item");
+    };
+  }
+});
