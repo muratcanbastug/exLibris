@@ -203,3 +203,18 @@ router.post("/:id/rate", async (req, res) => {
   res.status(400).json("The user is not allowed to rate this item.");
 });
 
+// Upgrade the rate
+router.patch("/:id/rate", async (req, res) => {
+  const { id } = req.params;
+  const { user_id, rate } = req.body;
+  try {
+    await db.query("CALL update_rate ($1, $2, $3)", [rate, user_id, id]);
+    res.status(200).json("Rate was upgraded successfully.");
+  } catch {
+    (err) => {
+      console.error(err);
+      res.status(500).json("An error occurred while upgrading the rate.");
+    };
+  }
+});
+
