@@ -99,6 +99,21 @@ router.patch("/:id", async (req, res) => {
   }
 });
 
+// Delete user
+router.delete("/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    await db.query("CALL delete_user_account($1::INTEGER)", [id]);
+    res.status(200).json({ result: "User deleted successfully." });
+  } catch (err) {
+    console.error(err);
+    res
+      .status(500)
+      .json({ error: "An error occurred while deleting the user." });
+  }
+  res.status(409).json("User has book.");
+});
+
 // Reset user password
 router.patch("/:id/reset-password", async (req, res) => {
   const { id } = req.params;
