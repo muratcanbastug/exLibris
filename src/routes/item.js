@@ -16,6 +16,30 @@ router.get("/avaliables", async (req, res) => {
   res.status(200).json(rows);
 });
 
+// Get all lost items
+router.get("/lost", async (req, res) => {
+  const { rows } = await db.query("SELECT * FROM all_lost_items", []);
+  res.status(200).json(rows);
+});
+
+// Get all maintenance items history
+router.get("/maintenance/history", async (req, res) => {
+  const { rows } = await db.query(
+    "SELECT * FROM all_maintenance_history_items",
+    []
+  );
+  res.status(200).json(rows);
+});
+
+// Get all current maintenance items
+router.get("/maintenance/current", async (req, res) => {
+  const { rows } = await db.query(
+    "SELECT * FROM all_maintenance_log_items",
+    []
+  );
+  res.status(200).json(rows);
+});
+
 // Get the item
 router.get("/:id", async (req, res) => {
   const { id } = req.params;
