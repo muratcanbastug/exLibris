@@ -40,6 +40,42 @@ router.get("/maintenance/current", async (req, res) => {
   res.status(200).json(rows);
 });
 
+// Add maintenance process
+router.post("/maintenance/current/:id", async (req, res) => {
+  const { id } = req.params;
+  const { admin_id, description } = req.body;
+
+  try {
+    await db.query("CALL add_maintenance_log($1, $2, $3::TEXT)", [
+      id,
+      admin_id,
+      description,
+    ]);
+    res.status(200).json("Maintenance process created successfully.");
+  } catch (err) {
+    console.log(err);
+    res.status(500).json("An error occurred while adding maintenance process.");
+  }
+  res
+    .status(409)
+    .json(
+      "Item is not available. Update item status first to start maintenance process."
+    );
+});
+
+// Add maintenance history
+router.post("/maintenance/history/:id", async (req, res) => {
+  const { id } = req.params;
+  const { admin_id } = req.body;
+  try {
+    await db.query("CALL add_maintenance_history($1, $2)", [id, admin_id]);
+    res.status(200).json("Maintenance history added successfully.");
+  } catch (err) {
+    console.log(err);
+    res.status(500).json("An error occurred while adding maintenance history.");
+  }
+});
+
 // Get the item
 router.get("/:id", async (req, res) => {
   const { id } = req.params;
