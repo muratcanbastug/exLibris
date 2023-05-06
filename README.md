@@ -8,16 +8,16 @@ Exlibris aims to develop an online library automation system that enables users 
 
 ### Features
 
-- **Catalog Management: **The system will allow library staff to manage their library
+- **Catalog Management:** The system will allow library staff to manage their library
 resources, including books, journals, articles, and other material. Catalog management
 will include adding, editing, and deleting records, as well as updating the status and
 location of library resources.
 
 - **Admin Management:** The system will enable library administrators to manage user accounts, including account creation, deletion, and access levels. Administrators can also monitor and track the activity of staff and administrators.
 
-- **Circulation Management: **The system will facilitate the lending and borrowing of library resources, including issuing and returning books, tracking overdue books, rating books and managing book reservations.
+- **Circulation Management:** The system will facilitate the lending and borrowing of library resources, including issuing and returning books, tracking overdue books, rating books and managing book reservations.
 
-- **Reporting and Analytics: **The system will provide detailed reports and analytics to library
+- **Reporting and Analytics:** The system will provide detailed reports and analytics to library
 
 - **Security and Access Control:** The system will ensure the security of the library's
 resources by implementing access controls, including user authentication, permission,
