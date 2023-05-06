@@ -22,6 +22,31 @@ router.get("/lost", async (req, res) => {
   res.status(200).json(rows);
 });
 
+// Add lost item
+router.post("/lost/:id", async (req, res) => {
+  const { id } = req.params;
+  const { admin_id } = req.body;
+  try {
+    await db.query("CALL add_lost_item($1, $2)", [id, admin_id]);
+    res.status(200).json("The lost item was added successfully.");
+  } catch (err) {
+    console.error(err);
+    res.status(500).json("An error occured while adding the lost item.");
+  }
+});
+
+// Delete lost item
+router.delete("/lost/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    await db.query("CALL delete_lost_item($1, $2)", [id]);
+    res.status(200).json("The lost item was deleted successfully.");
+  } catch (err) {
+    console.error(err);
+    res.status(500).json("An error occured while deleting the lost item.");
+  }
+});
+
 // Get all maintenance items history
 router.get("/maintenance/history", async (req, res) => {
   const { rows } = await db.query(
