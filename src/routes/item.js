@@ -165,3 +165,15 @@ router.post("/nonperiodical", async (req, res) => {
     };
   }
 });
+
+// Delete the item
+router.delete("/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    db.query("CALL delete_item($1)", [id]);
+    res.status(200).json("The item was successfully deleted.");
+  } catch (err) {
+    console.error(err);
+    res.status(500).json("An error occurred while deleting item");
+  }
+});
