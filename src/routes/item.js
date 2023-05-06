@@ -186,3 +186,20 @@ router.get("/:id/rate", async (req, res) => {
   ]);
   res.status(200).json(rows[0].rate);
 });
+
+// Rate the item
+router.post("/:id/rate", async (req, res) => {
+  const { id } = req.params;
+  const { user_id, rate } = req.body;
+  try {
+    await db.query("CALL add_rate ($1, $2, $3)", [id, user_id, rate]);
+    res.status(200).json("Rate was added successfully.");
+  } catch {
+    (err) => {
+      console.error(err);
+      res.status(500).json("An error occurred while adding the rate.");
+    };
+  }
+  res.status(400).json("The user is not allowed to rate this item.");
+});
+
