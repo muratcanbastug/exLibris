@@ -177,3 +177,12 @@ router.delete("/:id", async (req, res) => {
     res.status(500).json("An error occurred while deleting item");
   }
 });
+
+// Get the item rate
+router.get("/:id/rate", async (req, res) => {
+  const { id } = req.params;
+  const { rows } = await db.query("SELECT rate FROM item WHERE item_id = $1", [
+    id,
+  ]);
+  res.status(200).json(rows[0].rate);
+});
