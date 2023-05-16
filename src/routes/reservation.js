@@ -65,7 +65,6 @@ router.delete("/:id", async (req, res) => {
     };
   }
   res.status(409).json({
-    message:
-      "Item is available to rent or already reserved or user has max item.",
+    message: "Item is not reserved.",
   });
 });

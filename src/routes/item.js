@@ -39,7 +39,7 @@ router.post("/lost/:id", async (req, res) => {
 router.delete("/lost/:id", async (req, res) => {
   const { id } = req.params;
   try {
-    await db.query("CALL delete_lost_item($1, $2)", [id]);
+    await db.query("CALL delete_lost_item($1)", [id]);
     res.status(200).json("The lost item was deleted successfully.");
   } catch (err) {
     console.error(err);
