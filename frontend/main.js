@@ -9,7 +9,7 @@ function createWindow () {
     }
   })
   win.maximize();
-  win.loadFile('features.html')
+  win.loadFile('index2.html')
 
 }
 

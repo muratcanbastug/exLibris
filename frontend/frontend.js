@@ -329,11 +329,13 @@ button.addEventListener("click", () => {
                     })
                     .then(data => {
                         const message = document.createElement("p");
-                        message.textContent = "Succesufuly Updated User Information";
+                        message.textContent = data.result;
                         contentArea.appendChild(message);
                     })
                     .catch(error => {
-                      console.error(error);
+                        const message = document.createElement("p");
+                        message.textContent = "Failed to update user : " +  error.message;
+                        contentArea.appendChild(message);
                     });
                   });
                 })
@@ -972,15 +974,15 @@ else if (button.id === "rental1") {
             label.textContent = myLabel;
             const cell = row.insertCell();
             cell.appendChild(label);
-            for (let nestedProp in jsonObj[prop]) {
-            const nestedLabel = document.createElement("label"); 
-            let nestedPropWithSpaces = nestedProp.replace(/_/g, " ");
+                for (let nestedProp in jsonObj[prop]) {
+                const nestedLabel = document.createElement("label"); 
+                let nestedPropWithSpaces = nestedProp.replace(/_/g, " ");
 
-            const nestedValue = document.createTextNode(jsonObj[prop][nestedProp]);
-            const nestedValueCell = row.insertCell();
-            nestedValueCell.appendChild(nestedValue);
-              
-            }
+                const nestedValue = document.createTextNode(jsonObj[prop][nestedProp]);
+                const nestedValueCell = row.insertCell();
+                nestedValueCell.appendChild(nestedValue);
+                
+                }
             row = table.insertRow();
             }
             contentArea.appendChild(table);
@@ -3312,9 +3314,44 @@ else if (button.id === "reservation1") {
             }
         })
         .then(data => {
-            const message = document.createElement("p");
-            message.textContent = "Successfuly Geted Item Reservation Informations";
-            contentArea.appendChild(message);
+            const pre = document.createElement("pre");
+            pre.textContent = JSON.stringify(data, null, 2);
+            const jsonObj = JSON.parse(pre.textContent);
+
+            const table = document.createElement("table");
+            let row = table.insertRow();
+            let counter = 0;
+            const nestedCell = row.insertCell();
+            for (let nestedProp in jsonObj[0]) {
+                const nestedLabel = document.createElement("label");
+                let nestedLabelContent = nestedLabel.textContent;
+                let nestedPropWithSpaces = nestedProp.replace(/_/g, " ");
+                nestedLabelContent += `${nestedPropWithSpaces}`;
+                nestedLabel.textContent = nestedLabelContent;
+                const nestedCell = row.insertCell();
+                nestedCell.appendChild(nestedLabel);
+            }
+            row = table.insertRow();
+            for (let prop in jsonObj) {
+            counter++;
+            const label = document.createElement("label");
+            let myLabel = label.textContent;
+            myLabel += `${counter}-`;
+            label.textContent = myLabel;
+            const cell = row.insertCell();
+            cell.appendChild(label);
+            for (let nestedProp in jsonObj[prop]) {
+            const nestedLabel = document.createElement("label"); 
+            let nestedPropWithSpaces = nestedProp.replace(/_/g, " ");
+
+            const nestedValue = document.createTextNode(jsonObj[prop][nestedProp]);
+            const nestedValueCell = row.insertCell();
+            nestedValueCell.appendChild(nestedValue);
+              
+            }
+            row = table.insertRow();
+            }
+            contentArea.appendChild(table);
       
         })
         .catch(error => {
@@ -3351,11 +3388,9 @@ else if (button.id === "reservation1") {
         
         .then(response => {
             if (response.ok) {
-            
-            return response.json();
+                return response.json();
             } else {
-            
-            throw new Error("Something went wrong");
+                throw new Error('Somthing went wrong');
             }
         })
         .then(data => {
@@ -3373,7 +3408,7 @@ else if (button.id === "reservation1") {
      
 }else if (button.id === "reservation4") {
     const form = document.createElement("form");
-    form.id = "user_id";
+    form.id = "user";
     form.innerHTML = `
     <b>Delete Reservation</b><br><br>
     <label for="item_id">Item ID:</label>
@@ -3395,14 +3430,12 @@ else if (button.id === "reservation1") {
             },
             body: JSON.stringify(formDataObj)
         })
-        
         .then(response => {
             if (response.ok) {
-            
-            return response.json();
+                return response.json();
             } else {
             
-            throw new Error("Something went wrong");
+                throw new Error("Something went wrong");
             }
         })
         .then(data => {
