@@ -16,7 +16,6 @@ router.get("/", adminAuthMiddleware, async (req, res) => {
 // Get the user rentals at that time
 router.get("/user", authMiddleware, async (req, res) => {
   const { user_id } = req.tokenPayload;
-  console.log(user_id);
   if (user_id !== undefined) {
     const { rows } = await db.query(
       "SELECT * FROM all_current_rentals WHERE user_id = $1",
