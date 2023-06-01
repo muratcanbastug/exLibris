@@ -41,10 +41,9 @@ router.post("/", async (req, res) => {
         const now = Date.now();
         const expirationDate = new Date(now);
         expirationDate.setDate(expirationDate.getDate() + 30);
-        const expirationDateTimestamp = expirationDate.getTime();
         await db.query(
           "INSERT INTO refresh_tokens (token, expires_at) VALUES ($1, $2)",
-          [refreshToken, expirationDateTimestamp]
+          [refreshToken, expirationDate]
         );
         res
           .status(200)
@@ -82,10 +81,9 @@ router.post("/", async (req, res) => {
           const now = Date.now();
           const expirationDate = new Date(now);
           expirationDate.setDate(expirationDate.getDate() + 30);
-          const expirationDateTimestamp = expirationDate.getTime();
           await db.query(
             "INSERT INTO refresh_tokens (token, expires_at) VALUES ($1, $2)",
-            [refreshToken, expirationDateTimestamp]
+            [refreshToken, expirationDate]
           );
           res
             .status(200)
@@ -122,34 +120,40 @@ router.post("/refresh", async (req, res) => {
       return res.status(401).json({ message: "Invalid refresh token" });
     }
 
-    if (existingRows[0].expires_at < new Date().getTime()) {
+    const now = Date.now();
+    const currentDate = new Date(now);
+    if (existingRows[0].expires_at < currentDate) {
       await db.query("DELETE FROM refresh_tokens WHERE token = $1::VARCHAR", [
         refreshToken,
       ]);
       return res.status(401).json({ message: "Invalid refresh token" });
     }
 
-    jwt.verify(token, process.env.REFRESH_TOKEN_SECRET, (err, payload) => {
-      if (err) {
-        console.log(err);
-        res.status(400).json({ message: "Not Logged" });
+    jwt.verify(
+      refreshToken,
+      process.env.REFRESH_TOKEN_SECRET,
+      (err, payload) => {
+        if (err) {
+          console.log(err);
+          res.status(400).json({ message: "Not Logged" });
+        }
+        if (payload.admin) {
+          const accesToken = jwt.sign(
+            { admin_id: payload.admin_id, email: payload.email, admin: true },
+            process.env.ACCES_TOKEN_SECRET,
+            { expiresIn: "15m" }
+          );
+          return res.status(200).json({ accesToken: accesToken });
+        } else {
+          const accesToken = jwt.sign(
+            { user_id: payload.user_id, email: payload.email, admin: false },
+            process.env.ACCES_TOKEN_SECRET,
+            { expiresIn: "15m" }
+          );
+          return res.status(200).json({ accesToken: accesToken });
+        }
       }
-      if (payload.admin) {
-        const accesToken = jwt.sign(
-          { admin_id: payload.admin_id, email: payload.email, admin: true },
-          process.env.ACCES_TOKEN_SECRET,
-          { expiresIn: "15m" }
-        );
-        return res.status(200).json({ accesToken: accesToken });
-      } else {
-        const accesToken = jwt.sign(
-          { user_id: payload.user_id, email: payload.email, admin: false },
-          process.env.ACCES_TOKEN_SECRET,
-          { expiresIn: "15m" }
-        );
-        return res.status(200).json({ accesToken: accesToken });
-      }
-    });
+    );
   } catch (e) {
     console.log(e);
     res
