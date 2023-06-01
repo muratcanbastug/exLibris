@@ -106,3 +106,54 @@ router.post("/", async (req, res) => {
   }
 });
 
+// Refresh Access Token
+router.post("/refresh", async (req, res) => {
+  try {
+    const { refreshToken } = req.body;
+    if (!refreshToken)
+      return res.status(401).json({ message: "Invalid token" });
+
+    const { rows: existingRows } = await db.query(
+      "SELECT * FROM refresh_tokens WHERE token = $1::VARCHAR",
+      [refreshToken]
+    );
+
+    if (existingRows.length === 0) {
+      return res.status(401).json({ message: "Invalid refresh token" });
+    }
+
+    if (existingRows[0].expires_at < new Date().getTime()) {
+      await db.query("DELETE FROM refresh_tokens WHERE token = $1::VARCHAR", [
+        refreshToken,
+      ]);
+      return res.status(401).json({ message: "Invalid refresh token" });
+    }
+
+    jwt.verify(token, process.env.REFRESH_TOKEN_SECRET, (err, payload) => {
+      if (err) {
+        console.log(err);
+        res.status(400).json({ message: "Not Logged" });
+      }
+      if (payload.admin) {
+        const accesToken = jwt.sign(
+          { admin_id: payload.admin_id, email: payload.email, admin: true },
+          process.env.ACCES_TOKEN_SECRET,
+          { expiresIn: "15m" }
+        );
+        return res.status(200).json({ accesToken: accesToken });
+      } else {
+        const accesToken = jwt.sign(
+          { user_id: payload.user_id, email: payload.email, admin: false },
+          process.env.ACCES_TOKEN_SECRET,
+          { expiresIn: "15m" }
+        );
+        return res.status(200).json({ accesToken: accesToken });
+      }
+    });
+  } catch (e) {
+    console.log(e);
+    res
+      .status(500)
+      .json({ message: "An error occurred while refreshing access token" });
+  }
+});
