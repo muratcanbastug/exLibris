@@ -3,26 +3,57 @@ const bcrypt = require("bcrypt");
 const db = require("../db");
 const router = new Router();
 const MAX_LISTS = 20;
+const {
+  adminAuthMiddleware,
+  authMiddleware,
+  loggedAuthMiddleware,
+} = require("../security/authMiddlware");
 
 module.exports = router;
 
-// Get user information
-router.get("/:id", async (req, res) => {
+// Get user information for user
+router.get("/user", authMiddleware, async (req, res) => {
+  const { user_id } = req.tokenPayload;
+  if (user_id === undefined) {
+    return res.status(403).json({ message: "Invalid token" });
+  }
+  const { rows } = await db.query(
+    "SELECT * FROM user_account WHERE user_id = $1",
+    [user_id]
+  );
+  res.status(200).json(rows[0]);
+});
+
+// Get all users information
+router.get("/all", adminAuthMiddleware, async (req, res) => {
+  const { rows } = await db.query(
+    "SELECT * FROM user_all_information ORDER BY user_id",
+    []
+  );
+  res.status(200).json(rows);
+});
+
+// Get user's all lists
+router.get("/lists", authMiddleware, async (req, res) => {
+  const { user_id } = req.tokenPayload;
+  if (user_id === undefined) {
+    return res.status(403).json({ message: "Invalid Token" });
+  }
+  const { rows } = await db.query(
+    "SELECT * FROM list WHERE user_id = $1::INTEGER",
+    [user_id]
+  );
+  res.status(200).json(rows);
+});
+
+// Get user information for admin
+router.get("/:id", adminAuthMiddleware, async (req, res) => {
   const { id } = req.params;
   const { rows } = await db.query(
     "SELECT * FROM user_account WHERE user_id = $1",
     [id]
   );
   res.status(200).json(rows[0]);
-});
-
-// Get all users information
-router.get("/", async (req, res) => {
-  const { rows } = await db.query(
-    "SELECT * FROM user_all_information ORDER BY user_id",
-    []
-  );
-  res.status(200).json(rows);
 });
 
 // Add new user
@@ -81,14 +112,25 @@ router.post("/", async (req, res) => {
 });
 
 // Update user information
-router.patch("/:id", async (req, res) => {
-  const { id } = req.params;
+router.patch("/", loggedAuthMiddleware, async (req, res) => {
+  const { user_id } = req.tokenPayload;
   const { first_name, last_name, email, username, phone_number, user_type_id } =
     req.body;
+  if (user_id === undefined) {
+    return res.status(403).json({ message: "Invalid Token" });
+  }
   try {
     await db.query(
       "CALL update_user_information($1::INTEGER, $2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR, $7::SMALLINT)",
-      [id, first_name, last_name, email, username, phone_number, user_type_id]
+      [
+        user_id,
+        first_name,
+        last_name,
+        email,
+        username,
+        phone_number,
+        user_type_id,
+      ]
     );
     res.status(200).json({ result: "User information updated successfully." });
   } catch (err) {
@@ -100,7 +142,7 @@ router.patch("/:id", async (req, res) => {
 });
 
 // Delete user
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", adminAuthMiddleware, async (req, res) => {
   const { id } = req.params;
   try {
     await db.query("CALL delete_user_account($1::INTEGER)", [id]);
@@ -115,14 +157,17 @@ router.delete("/:id", async (req, res) => {
 });
 
 // Reset user password
-router.patch("/:id/reset-password", async (req, res) => {
-  const { id } = req.params;
+router.patch("/reset-password", loggedAuthMiddleware, async (req, res) => {
+  const { user_id } = req.tokenPayload;
   const { new_password } = req.body;
+  if (user_id === undefined) {
+    return res.status(403).json({ message: "Invalid Token" });
+  }
   try {
     const hashedPassword = await bcrypt.hash(new_password, 10);
     await db.query(
       "UPDATE user_account SET password = $1::VARCHAR WHERE user_id = $2::INTEGER",
-      [hashedPassword, id]
+      [hashedPassword, user_id]
     );
     res.status(200).json({ result: "User password updated successfully." });
   } catch (err) {
@@ -133,25 +178,18 @@ router.patch("/:id/reset-password", async (req, res) => {
   }
 });
 
-// Get user's all lists
-router.get("/:id/lists", async (req, res) => {
-  const { id } = req.params;
-  const { rows } = await db.query(
-    "SELECT * FROM list WHERE user_id = $1::INTEGER",
-    [id]
-  );
-  res.status(200).json(rows);
-});
-
 // Add new list
-router.post("/:id/lists", async (req, res) => {
-  const { id } = req.params;
+router.post("/lists", authMiddleware, async (req, res) => {
+  const { user_id } = req.tokenPayload;
   const { list_name } = req.body;
+  if (user_id === undefined) {
+    return res.status(403).json({ message: "Invalid Token" });
+  }
   try {
     // Check if user with the given id_number already have MAX_LISTS list
     const { rows } = await db.query(
       "SELECT COUNT(*) FROM list WHERE user_id = $1::INTEGER",
-      [id]
+      [user_id]
     );
     if (rows[0].count > MAX_LISTS) {
       res.status(409).json({
@@ -160,7 +198,7 @@ router.post("/:id/lists", async (req, res) => {
     } else {
       await db.query(
         "INSERT INTO list (user_id, list_name) VALUES ($1::INTEGER, $2::VARCHAR)",
-        [id, list_name]
+        [user_id, list_name]
       );
       res.status(200).json("List has been created.");
     }
