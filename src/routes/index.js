@@ -11,6 +11,7 @@ const userTypes = require("./userType");
 const reservations = require("./reservation");
 const items = require("./item");
 const login = require("./login");
+const logout = require("./logout");
 
 module.exports = (app) => {
   app.use("/users", users);
@@ -26,4 +27,5 @@ module.exports = (app) => {
   app.use("/reservations", reservations);
   app.use("/items", items);
   app.use("/login", login);
+  app.use("/logout", logout);
 };
