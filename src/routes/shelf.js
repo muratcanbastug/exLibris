@@ -1,17 +1,18 @@
 const Router = require("express-promise-router");
 const db = require("../db");
 const router = new Router();
+const { adminAuthMiddleware } = require("../security/authMiddlware");
 
 module.exports = router;
 
 // Get all shelves
-router.get("/", async (req, res) => {
+router.get("/", adminAuthMiddleware, async (req, res) => {
   const { rows } = await db.query("SELECT * FROM shelf");
   res.status(200).json(rows);
 });
 
 // Add new shelf
-router.post("/", async (req, res) => {
+router.post("/", adminAuthMiddleware, async (req, res) => {
   const { shelf_code } = req.body;
   try {
     const { rows } = await db.query(
@@ -39,7 +40,7 @@ router.post("/", async (req, res) => {
 });
 
 // Delete a shelf
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", adminAuthMiddleware, async (req, res) => {
   const { id } = req.params;
   try {
     await db.query("CALL delete_shelf($1::INTEGER)", [id]);
@@ -56,7 +57,7 @@ router.delete("/:id", async (req, res) => {
 });
 
 // Add new branch
-router.post("/:id", async (req, res) => {
+router.post("/:id", adminAuthMiddleware, async (req, res) => {
   const { id } = req.params;
   const { branch_code } = req.body;
   try {
