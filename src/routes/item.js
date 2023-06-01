@@ -1,31 +1,35 @@
 const Router = require("express-promise-router");
 const db = require("../db");
 const router = new Router();
+const {
+  adminAuthMiddleware,
+  authMiddleware,
+} = require("../security/authMiddlware");
 
 module.exports = router;
 
 // Get all items
-router.get("/", async (req, res) => {
+router.get("/", authMiddleware, async (req, res) => {
   const { rows } = await db.query("SELECT * FROM item_search");
   res.status(200).json(rows);
 });
 
 // Get all avaliable items
-router.get("/avaliables", async (req, res) => {
+router.get("/avaliables", authMiddleware, async (req, res) => {
   const { rows } = await db.query("SELECT * FROM avaliable_items");
   res.status(200).json(rows);
 });
 
 // Get all lost items
-router.get("/lost", async (req, res) => {
+router.get("/lost", adminAuthMiddleware, async (req, res) => {
   const { rows } = await db.query("SELECT * FROM all_lost_items", []);
   res.status(200).json(rows);
 });
 
 // Add lost item
-router.post("/lost/:id", async (req, res) => {
+router.post("/lost/:id", adminAuthMiddleware, async (req, res) => {
   const { id } = req.params;
-  const { admin_id } = req.body;
+  const { admin_id } = req.tokenPayload;
   try {
     await db.query("CALL add_lost_item($1, $2)", [id, admin_id]);
     res.status(200).json("The lost item was added successfully.");
@@ -36,7 +40,7 @@ router.post("/lost/:id", async (req, res) => {
 });
 
 // Delete lost item
-router.delete("/lost/:id", async (req, res) => {
+router.delete("/lost/:id", adminAuthMiddleware, async (req, res) => {
   const { id } = req.params;
   try {
     await db.query("CALL delete_lost_item($1)", [id]);
@@ -48,7 +52,7 @@ router.delete("/lost/:id", async (req, res) => {
 });
 
 // Get all maintenance items history
-router.get("/maintenance/history", async (req, res) => {
+router.get("/maintenance/history", adminAuthMiddleware, async (req, res) => {
   const { rows } = await db.query(
     "SELECT * FROM all_maintenance_history_items",
     []
@@ -57,7 +61,7 @@ router.get("/maintenance/history", async (req, res) => {
 });
 
 // Get all current maintenance items
-router.get("/maintenance/current", async (req, res) => {
+router.get("/maintenance/current", adminAuthMiddleware, async (req, res) => {
   const { rows } = await db.query(
     "SELECT * FROM all_maintenance_log_items",
     []
@@ -66,43 +70,56 @@ router.get("/maintenance/current", async (req, res) => {
 });
 
 // Add maintenance process
-router.post("/maintenance/current/:id", async (req, res) => {
-  const { id } = req.params;
-  const { admin_id, description } = req.body;
+router.post(
+  "/maintenance/current/:id",
+  adminAuthMiddleware,
+  async (req, res) => {
+    const { id } = req.params;
+    const { description } = req.body;
+    const { admin_id } = req.tokenPayload;
 
-  try {
-    await db.query("CALL add_maintenance_log($1, $2, $3::TEXT)", [
-      id,
-      admin_id,
-      description,
-    ]);
-    res.status(200).json("Maintenance process created successfully.");
-  } catch (err) {
-    console.log(err);
-    res.status(500).json("An error occurred while adding maintenance process.");
+    try {
+      await db.query("CALL add_maintenance_log($1, $2, $3::TEXT)", [
+        id,
+        admin_id,
+        description,
+      ]);
+      res.status(200).json("Maintenance process created successfully.");
+    } catch (err) {
+      console.log(err);
+      res
+        .status(500)
+        .json("An error occurred while adding maintenance process.");
+    }
+    res
+      .status(409)
+      .json(
+        "Item is not available. Update item status first to start maintenance process."
+      );
   }
-  res
-    .status(409)
-    .json(
-      "Item is not available. Update item status first to start maintenance process."
-    );
-});
+);
 
 // Add maintenance history
-router.post("/maintenance/history/:id", async (req, res) => {
-  const { id } = req.params;
-  const { admin_id } = req.body;
-  try {
-    await db.query("CALL add_maintenance_history($1, $2)", [id, admin_id]);
-    res.status(200).json("Maintenance history added successfully.");
-  } catch (err) {
-    console.log(err);
-    res.status(500).json("An error occurred while adding maintenance history.");
+router.post(
+  "/maintenance/history/:id",
+  adminAuthMiddleware,
+  async (req, res) => {
+    const { id } = req.params;
+    const { admin_id } = req.tokenPayload;
+    try {
+      await db.query("CALL add_maintenance_history($1, $2)", [id, admin_id]);
+      res.status(200).json("Maintenance history added successfully.");
+    } catch (err) {
+      console.log(err);
+      res
+        .status(500)
+        .json("An error occurred while adding maintenance history.");
+    }
   }
-});
+);
 
 // Get the item
-router.get("/:id", async (req, res) => {
+router.get("/:id", authMiddleware, async (req, res) => {
   const { id } = req.params;
   const { rows } = await db.query(
     "SELECT * FROM item_search WHERE item_id = $1",
@@ -112,7 +129,7 @@ router.get("/:id", async (req, res) => {
 });
 
 // Add multimedia item
-router.post("/multimedia", async (req, res) => {
+router.post("/multimedia", adminAuthMiddleware, async (req, res) => {
   const {
     item_name,
     publication_date,
@@ -154,7 +171,7 @@ router.post("/multimedia", async (req, res) => {
 });
 
 // Add periodical item
-router.post("/periodical", async (req, res) => {
+router.post("/periodical", adminAuthMiddleware, async (req, res) => {
   const {
     item_name,
     publication_date,
@@ -200,7 +217,7 @@ router.post("/periodical", async (req, res) => {
 });
 
 // Add non-periodical item
-router.post("/nonperiodical", async (req, res) => {
+router.post("/nonperiodical", adminAuthMiddleware, async (req, res) => {
   const {
     item_name,
     publication_date,
@@ -252,7 +269,7 @@ router.post("/nonperiodical", async (req, res) => {
 });
 
 // Delete the item
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", adminAuthMiddleware, async (req, res) => {
   const { id } = req.params;
   try {
     await db.query("CALL delete_item($1)", [id]);
@@ -264,7 +281,7 @@ router.delete("/:id", async (req, res) => {
 });
 
 // Get the item rate
-router.get("/:id/rate", async (req, res) => {
+router.get("/:id/rate", authMiddleware, async (req, res) => {
   const { id } = req.params;
   const { rows } = await db.query("SELECT rate FROM item WHERE item_id = $1", [
     id,
@@ -273,9 +290,10 @@ router.get("/:id/rate", async (req, res) => {
 });
 
 // Rate the item
-router.post("/:id/rate", async (req, res) => {
+router.post("/:id/rate", authMiddleware, async (req, res) => {
   const { id } = req.params;
-  const { user_id, rate } = req.body;
+  const { rate } = req.body;
+  const { user_id } = req.tokenPayload;
   try {
     await db.query("CALL add_rate ($1, $2, $3)", [id, user_id, rate]);
     res.status(200).json("Rate was added successfully.");
@@ -289,9 +307,10 @@ router.post("/:id/rate", async (req, res) => {
 });
 
 // Upgrade the rate
-router.patch("/:id/rate", async (req, res) => {
+router.patch("/:id/rate", authMiddleware, async (req, res) => {
   const { id } = req.params;
-  const { user_id, rate } = req.body;
+  const { rate } = req.body;
+  const { user_id } = req.tokenPayload;
   try {
     await db.query("CALL update_rate ($1, $2, $3)", [rate, user_id, id]);
     res.status(200).json("Rate was upgraded successfully.");
@@ -304,7 +323,7 @@ router.patch("/:id/rate", async (req, res) => {
 });
 
 // Update multimedia item
-router.patch("/:id/multimedia", async (req, res) => {
+router.patch("/:id/multimedia", adminAuthMiddleware, async (req, res) => {
   const { id } = req.params;
   const {
     item_name,
@@ -343,7 +362,7 @@ router.patch("/:id/multimedia", async (req, res) => {
 });
 
 // Update periodical item
-router.patch("/:id/periodical", async (req, res) => {
+router.patch("/:id/periodical", adminAuthMiddleware, async (req, res) => {
   const { id } = req.params;
   const {
     item_name,
@@ -386,7 +405,7 @@ router.patch("/:id/periodical", async (req, res) => {
 });
 
 // Update non-periodical item
-router.patch("/:id/nonperiodical", async (req, res) => {
+router.patch("/:id/nonperiodical", adminAuthMiddleware, async (req, res) => {
   const { id } = req.params;
   const {
     item_name,
