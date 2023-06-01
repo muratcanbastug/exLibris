@@ -1,17 +1,37 @@
 const Router = require("express-promise-router");
 const db = require("../db");
 const router = new Router();
+const {
+  adminAuthMiddleware,
+  authMiddleware,
+} = require("../security/authMiddlware");
 
 module.exports = router;
 
 // Get all reservations at that time
-router.get("/", async (req, res) => {
+router.get("/", adminAuthMiddleware, async (req, res) => {
   const { rows } = await db.query("SELECT * FROM all_current_reservations");
   res.status(200).json(rows);
 });
 
-// Get the item rental at that time
-router.get("/:id", async (req, res) => {
+// Get the user reservations at that time
+router.get("/user", authMiddleware, async (req, res) => {
+  const { user_id } = req.tokenPayload;
+  if (user_id !== undefined) {
+    const { rows } = await db.query(
+      "SELECT * FROM all_current_reservations WHERE user_id = $1",
+      [user_id]
+    );
+    res.status(200).json(rows);
+  } else {
+    res
+      .status(400)
+      .json({ message: "The user does not have any reservation logs." });
+  }
+});
+
+// Get the item reservation at that time
+router.get("/:id", adminAuthMiddleware, async (req, res) => {
   const { id } = req.params;
   const { rows } = await db.query(
     "SELECT * FROM all_current_reservations WHERE item_id = $1",
@@ -21,10 +41,12 @@ router.get("/:id", async (req, res) => {
 });
 
 // Add reservation
-router.post("/:id", async (req, res) => {
+router.post("/:id", authMiddleware, async (req, res) => {
   const { id } = req.params;
-  const { user_id } = req.body;
-
+  const { user_id } = req.tokenPayload;
+  if (user_id === undefined) {
+    return res.status(500).json({ message: "Invalid Token" });
+  }
   try {
     await db.query("CALL add_reservation($1::INTEGER, $2::INTEGER)", [
       id,
@@ -46,10 +68,12 @@ router.post("/:id", async (req, res) => {
 });
 
 // Delete reservation
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", authMiddleware, async (req, res) => {
   const { id } = req.params;
-  const { user_id } = req.body;
-
+  const { user_id } = req.tokenPayload;
+  if (user_id === undefined) {
+    return res.status(500).json({ message: "Invalid Token" });
+  }
   try {
     await db.query("CALL delete_reservation($1::INTEGER, $2::INTEGER)", [
       id,
