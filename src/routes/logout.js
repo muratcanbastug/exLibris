@@ -10,6 +10,13 @@ module.exports = router;
 router.post("/", async (req, res) => {
   try {
     const { refreshToken } = req.body;
+    const { rows: existingRows } = await db.query(
+      "SELECT * FROM refresh_tokens WHERE token = $1::VARCHAR",
+      [refreshToken]
+    );
+    if (existingRows.length === 0) {
+      res.status(500).json({ message: "Invalid Token" });
+    }
     await db.query("DELETE FROM refresh_tokens WHERE token = $1::VARCHAR", [
       refreshToken,
     ]);
