@@ -1,13 +1,15 @@
 const Router = require("express-promise-router");
 const db = require("../db");
 const router = new Router();
+const { adminAuthMiddleware } = require("../security/authMiddlware");
 
 module.exports = router;
 
 // Ban an user
-router.post("/:id", async (req, res) => {
+router.post("/:id", adminAuthMiddleware, async (req, res) => {
   const { id } = req.params;
-  const { admin_id, report } = req.body;
+  const { admin_id } = req.tokenPayload;
+  const { report } = req.body;
   try {
     // Check if user with the given id_number is already banned
     const { rows } = await db.query(
@@ -36,7 +38,7 @@ router.post("/:id", async (req, res) => {
 });
 
 // Unban an user
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", adminAuthMiddleware, async (req, res) => {
   const { id } = req.params;
   try {
     // Check if user with the given id_number is banned
@@ -63,7 +65,7 @@ router.delete("/:id", async (req, res) => {
 });
 
 // Get all banned users
-router.get("/", async (req, res) => {
+router.get("/", adminAuthMiddleware, async (req, res) => {
   const { rows } = await db.query(
     "SELECT * FROM all_banned_users ORDER BY user_id"
   );
