@@ -9,7 +9,7 @@ module.exports = router;
 //Logout
 router.post("/", async (req, res) => {
   try {
-    const { refreshToken } = req.params.refreshToken;
+    const { refreshToken } = req.body;
     await db.query("DELETE FROM refresh_tokens WHERE token = $1::VARCHAR", [
       refreshToken,
     ]);
