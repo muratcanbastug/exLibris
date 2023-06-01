@@ -2,15 +2,20 @@ const Router = require("express-promise-router");
 const db = require("../db");
 const router = new Router();
 module.exports = router;
+const {
+  adminAuthMiddleware,
+  authMiddleware,
+} = require("../security/authMiddlware");
 
 // Get all rentals at that time
-router.get("/", async (req, res) => {
+router.get("/", adminAuthMiddleware, async (req, res) => {
   const { rows } = await db.query("SELECT * FROM all_current_rentals");
   res.status(200).json(rows);
 });
 
+
 // Get the item rental at that time
-router.get("/:id", async (req, res) => {
+router.get("/:id", adminAuthMiddleware, async (req, res) => {
   const { id } = req.params;
   const { rows } = await db.query(
     "SELECT * FROM all_current_rentals WHERE item_id = $1",
@@ -20,10 +25,10 @@ router.get("/:id", async (req, res) => {
 });
 
 // Add rental
-router.post("/:id", async (req, res) => {
+router.post("/:id", adminAuthMiddleware, async (req, res) => {
   const { id } = req.params;
-  const { user_id, admin_id } = req.body;
-
+  const { user_id } = req.body;
+  const { admin_id } = req.tokenPayload;
   try {
     await db.query("CALL add_rental($1::INTEGER, $2::INTEGER, $3::INTEGER)", [
       id,
@@ -45,7 +50,7 @@ router.post("/:id", async (req, res) => {
 });
 
 // Update due date
-router.patch("/:id", async (req, res) => {
+router.patch("/:id", adminAuthMiddleware, async (req, res) => {
   const { id } = req.params;
   const { user_id } = req.body;
 
