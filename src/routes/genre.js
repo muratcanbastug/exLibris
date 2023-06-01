@@ -1,17 +1,21 @@
 const Router = require("express-promise-router");
 const db = require("../db");
 const router = new Router();
+const {
+  adminAuthMiddleware,
+  authMiddleware,
+} = require("../security/authMiddlware");
 
 module.exports = router;
 
 // Get all genres
-router.get("/", async (req, res) => {
+router.get("/", authMiddleware, async (req, res) => {
   const { rows } = await db.query("SELECT * FROM genre ORDER BY genre_name");
   res.status(200).json(rows);
 });
 
 // Add new genre
-router.post("/", async (req, res) => {
+router.post("/", adminAuthMiddleware, async (req, res) => {
   const { genre_name } = req.body;
   try {
     // Check if genre with the given genre_name already exists
