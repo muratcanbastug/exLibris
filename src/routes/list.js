@@ -8,6 +8,9 @@ const { authMiddleware } = require("../security/authMiddlware");
 router.get("/:id", authMiddleware, async (req, res) => {
   const { id } = req.params;
   const { user_id } = req.tokenPayload;
+  if (user_id === undefined) {
+    return res.status(403).json({ message: "Invalid token" });
+  }
   const { rows } = await db.query(
     "SELECT user_id FROM list WHERE list_id = $1",
     [id]
@@ -30,6 +33,9 @@ router.get("/:id", authMiddleware, async (req, res) => {
 router.delete("/:id", authMiddleware, async (req, res) => {
   const { id } = req.params;
   const { user_id } = req.tokenPayload;
+  if (user_id === undefined) {
+    return res.status(403).json({ message: "Invalid token" });
+  }
   try {
     const { rows } = await db.query(
       "SELECT user_id FROM list WHERE list_id = $1",
@@ -38,7 +44,12 @@ router.delete("/:id", authMiddleware, async (req, res) => {
     if (rows.length === 0) {
       res.status(400).json({ message: "The list does not exist." });
     } else if (rows[0].user_id === user_id || req.tokenPayload.admin) {
-      await db.query("DELETE FROM list WHERE list_id = $1", [id]);
+      await db.query(
+        "DELETE FROM list WHERE list_id = $1",
+        [id],
+        user_id,
+        false
+      );
       res.status(200).json("The list was deleted successfully.");
     } else {
       res
@@ -60,6 +71,9 @@ router.patch("/:id", authMiddleware, async (req, res) => {
   const { id } = req.params;
   const { new_name } = req.body;
   const { user_id } = req.tokenPayload;
+  if (user_id === undefined) {
+    return res.status(403).json({ message: "Invalid token" });
+  }
   try {
     const { rows } = await db.query(
       "SELECT user_id FROM list WHERE list_id = $1",
@@ -70,7 +84,9 @@ router.patch("/:id", authMiddleware, async (req, res) => {
     } else if (rows[0].user_id === user_id || req.tokenPayload.admin) {
       await db.query(
         "UPDATE list SET list_name = $1::VARCHAR WHERE list_id = $2::INTEGER",
-        [new_name, id]
+        [new_name, id],
+        user_id,
+        false
       );
       res.status(200).json("The list name was updated successfully.");
     } else {
@@ -93,6 +109,9 @@ router.post("/:id", authMiddleware, async (req, res) => {
   const { id } = req.params;
   const { item_id } = req.body;
   const { user_id } = req.tokenPayload;
+  if (user_id === undefined) {
+    return res.status(403).json({ message: "Invalid token" });
+  }
   try {
     const { rows } = await db.query(
       "SELECT COUNT(*) FROM item_list WHERE list_id = $1 AND item_id = $2",
@@ -110,7 +129,9 @@ router.post("/:id", authMiddleware, async (req, res) => {
       } else if (rows[0].user_id === user_id || req.tokenPayload.admin) {
         await db.query(
           "INSERT INTO item_list (list_id, item_id) VALUES ($1, $2)",
-          [id, item_id]
+          [id, item_id],
+          user_id,
+          false
         );
         res.status(200).json("The item was added to the list successfully.");
       } else {
@@ -134,7 +155,9 @@ router.delete("/:id/items", authMiddleware, async (req, res) => {
   const { id } = req.params;
   const { item_id } = req.body;
   const { user_id } = req.tokenPayload;
-
+  if (user_id === undefined) {
+    return res.status(403).json({ message: "Invalid token" });
+  }
   try {
     const { rows } = await db.query(
       "SELECT user_id FROM list WHERE list_id = $1",
@@ -145,7 +168,9 @@ router.delete("/:id/items", authMiddleware, async (req, res) => {
     } else if (rows[0].user_id === user_id || req.tokenPayload.admin) {
       await db.query(
         "DELETE FROM item_list WHERE list_id = $1 AND item_id = $2",
-        [id, item_id]
+        [id, item_id],
+        user_id,
+        false
       );
       res.status(200).json("The item was deleted from the list successfully.");
     } else {

@@ -18,7 +18,12 @@ router.get("/", authMiddleware, async (req, res) => {
 router.delete("/:id", adminAuthMiddleware, async (req, res) => {
   const { id } = req.params;
   try {
-    await db.query("CALL delete_branch($1::INTEGER)", [id]);
+    await db.query(
+      "CALL delete_branch($1::INTEGER)",
+      [id],
+      req.tokenPayload.admin_id,
+      true
+    );
     res.status(200).json("The delete was successful.");
   } catch {
     (err) => {

@@ -25,7 +25,9 @@ router.post("/:id", adminAuthMiddleware, async (req, res) => {
     } else {
       await db.query(
         "CALL add_banned_user($1::INTEGER, $2::INTEGER, $3::VARCHAR)",
-        [id, admin_id, report]
+        [id, admin_id, report],
+        req.tokenPayload.admin_id,
+        true
       );
       res.status(200).json({ user_id: id });
     }
@@ -48,7 +50,12 @@ router.delete("/:id", adminAuthMiddleware, async (req, res) => {
     );
 
     if (rows[0].banned) {
-      await db.query("CALL delete_ban($1::INTEGER)", [id]);
+      await db.query(
+        "CALL delete_ban($1::INTEGER)",
+        [id],
+        req.tokenPayload.admin_id,
+        true
+      );
       res.status(200).json({ user_id: id });
     } else {
       // User is not banned

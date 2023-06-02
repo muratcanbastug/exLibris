@@ -1,17 +1,18 @@
 const Router = require("express-promise-router");
 const db = require("../db");
 const router = new Router();
+const { adminAuthMiddleware } = require("../security/authMiddlware");
 
 module.exports = router;
 
 // Get all user types
-router.get("/", async (req, res) => {
+router.get("/", adminAuthMiddleware, async (req, res) => {
   const { rows } = await db.query("SELECT * FROM user_type");
   res.status(200).json(rows);
 });
 
 // Add new user type
-router.post("/", async (req, res) => {
+router.post("/", adminAuthMiddleware, async (req, res) => {
   const {
     type_name,
     max_extratime,
@@ -41,7 +42,9 @@ router.post("/", async (req, res) => {
           penalty_fee,
           rental_time,
           1,
-        ]
+        ],
+        req.tokenPayload.admin_id,
+        true
       );
       res.status(200).json({ user_type_id: rows[0].p_user_type_id });
     }
@@ -56,10 +59,15 @@ router.post("/", async (req, res) => {
 });
 
 // Delete the user type
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", adminAuthMiddleware, async (req, res) => {
   const { id } = req.params;
   try {
-    await db.query("CALL delete_user_type($1)", [id]);
+    await db.query(
+      "CALL delete_user_type($1)",
+      [id],
+      req.tokenPayload.admin_id,
+      true
+    );
     res.status(200).json("The user type was successfully deleted.");
   } catch {
     (err) => {
@@ -75,7 +83,7 @@ router.delete("/:id", async (req, res) => {
 });
 
 // Update the user type
-router.patch("/:id", async (req, res) => {
+router.patch("/:id", adminAuthMiddleware, async (req, res) => {
   const { id } = req.params;
 
   const {
@@ -97,7 +105,9 @@ router.patch("/:id", async (req, res) => {
         max_reservation_day,
         rental_time,
         penalty_fee,
-      ]
+      ],
+      req.tokenPayload.admin_id,
+      true
     );
     res.status(200).json("User type was updated successfully.");
   } catch {

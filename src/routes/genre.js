@@ -30,7 +30,9 @@ router.post("/", adminAuthMiddleware, async (req, res) => {
     } else {
       const { rows } = await db.query(
         "CALL add_genre($1::VARCHAR, $2::INTEGER)",
-        [genre_name, 1]
+        [genre_name, 1],
+        req.tokenPayload.admin_id,
+        true
       );
       res.status(200).json({ genre_id: rows[0].p_genre_id });
     }

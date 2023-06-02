@@ -13,6 +13,7 @@ const items = require("./item");
 const login = require("./login");
 const logout = require("./logout");
 const notifications = require("./notification");
+const logs = require("./log");
 
 module.exports = (app) => {
   app.use("/users", users);
@@ -30,4 +31,5 @@ module.exports = (app) => {
   app.use("/login", login);
   app.use("/logout", logout);
   app.use("/notifications", notifications);
+  app.use("/logs", logs);
 };

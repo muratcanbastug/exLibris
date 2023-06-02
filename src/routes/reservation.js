@@ -48,10 +48,12 @@ router.post("/:id", authMiddleware, async (req, res) => {
     return res.status(500).json({ message: "Invalid Token" });
   }
   try {
-    await db.query("CALL add_reservation($1::INTEGER, $2::INTEGER)", [
-      id,
+    await db.query(
+      "CALL add_reservation($1::INTEGER, $2::INTEGER)",
+      [id, user_id],
       user_id,
-    ]);
+      false
+    );
     res.status(200).json({ message: "Reservation added successfully" });
   } catch {
     (err) => {
@@ -75,10 +77,12 @@ router.delete("/:id", authMiddleware, async (req, res) => {
     return res.status(500).json({ message: "Invalid Token" });
   }
   try {
-    await db.query("CALL delete_reservation($1::INTEGER, $2::INTEGER)", [
-      id,
+    await db.query(
+      "CALL delete_reservation($1::INTEGER, $2::INTEGER)",
+      [id, user_id],
       user_id,
-    ]);
+      false
+    );
     res.status(200).json({ message: "Reservation deleted successfully" });
   } catch {
     (err) => {

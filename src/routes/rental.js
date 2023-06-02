@@ -45,11 +45,12 @@ router.post("/:id", adminAuthMiddleware, async (req, res) => {
   const { user_id } = req.body;
   const { admin_id } = req.tokenPayload;
   try {
-    await db.query("CALL add_rental($1::INTEGER, $2::INTEGER, $3::INTEGER)", [
-      id,
-      user_id,
+    await db.query(
+      "CALL add_rental($1::INTEGER, $2::INTEGER, $3::INTEGER)",
+      [id, user_id, admin_id],
       admin_id,
-    ]);
+      true
+    );
     res.status(200).json({ message: "Rental added successfully" });
   } catch {
     (err) => {
@@ -72,7 +73,9 @@ router.patch("/:id", adminAuthMiddleware, async (req, res) => {
   try {
     const { rows } = await db.query(
       "CALL update_due_date_on_rental($1::INTEGER, $2::INTEGER, $3::Date)",
-      [id, user_id, "01-01-2000"]
+      [id, user_id, "01-01-2000"],
+      req.tokenPayload.admin_id,
+      true
     );
     res.status(200).json({ due_date: rows[0].p_due_date });
   } catch {

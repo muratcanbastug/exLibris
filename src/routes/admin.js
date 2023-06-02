@@ -44,7 +44,9 @@ router.post("/", adminAuthMiddleware, async (req, res) => {
           hashedPassword,
           phone_number,
           1,
-        ]
+        ],
+        req.tokenPayload.admin_id,
+        true
       );
       res.status(200).json({ admin_id: rows[0].p_admin_id });
     }
@@ -63,7 +65,9 @@ router.patch("/", adminAndLoggedAuthMiddleware, async (req, res) => {
   try {
     await db.query(
       "CALL update_admin_information($1::INTEGER, $2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR)",
-      [admin_id, first_name, last_name, email, username, phone_number]
+      [admin_id, first_name, last_name, email, username, phone_number],
+      req.tokenPayload.admin_id,
+      true
     );
     res.status(200).json({ result: "Admin information updated successfully." });
   } catch (err) {
@@ -85,7 +89,9 @@ router.patch(
       const hashedPassword = await bcrypt.hash(new_password, 10);
       await db.query(
         "UPDATE admin SET password = $1::VARCHAR WHERE admin_id = $2::INTEGER",
-        [hashedPassword, admin_id]
+        [hashedPassword, admin_id],
+        req.tokenPayload.admin_id,
+        true
       );
       res.status(200).json({ result: "Admin password updated successfully." });
     } catch (err) {

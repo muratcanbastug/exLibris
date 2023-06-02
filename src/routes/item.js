@@ -22,7 +22,7 @@ router.get("/avaliables", authMiddleware, async (req, res) => {
 
 // Get all lost items
 router.get("/lost", adminAuthMiddleware, async (req, res) => {
-  const { rows } = await db.query("SELECT * FROM all_lost_items", []);
+  const { rows } = await db.query("SELECT * FROM all_lost_items");
   res.status(200).json(rows);
 });
 
@@ -31,7 +31,12 @@ router.post("/lost/:id", adminAuthMiddleware, async (req, res) => {
   const { id } = req.params;
   const { admin_id } = req.tokenPayload;
   try {
-    await db.query("CALL add_lost_item($1, $2)", [id, admin_id]);
+    await db.query(
+      "CALL add_lost_item($1, $2)",
+      [id, admin_id],
+      req.tokenPayload.admin_id,
+      true
+    );
     res.status(200).json("The lost item was added successfully.");
   } catch (err) {
     console.error(err);
@@ -43,7 +48,12 @@ router.post("/lost/:id", adminAuthMiddleware, async (req, res) => {
 router.delete("/lost/:id", adminAuthMiddleware, async (req, res) => {
   const { id } = req.params;
   try {
-    await db.query("CALL delete_lost_item($1)", [id]);
+    await db.query(
+      "CALL delete_lost_item($1)",
+      [id],
+      req.tokenPayload.admin_id,
+      true
+    );
     res.status(200).json("The lost item was deleted successfully.");
   } catch (err) {
     console.error(err);
@@ -54,18 +64,14 @@ router.delete("/lost/:id", adminAuthMiddleware, async (req, res) => {
 // Get all maintenance items history
 router.get("/maintenance/history", adminAuthMiddleware, async (req, res) => {
   const { rows } = await db.query(
-    "SELECT * FROM all_maintenance_history_items",
-    []
+    "SELECT * FROM all_maintenance_history_items"
   );
   res.status(200).json(rows);
 });
 
 // Get all current maintenance items
 router.get("/maintenance/current", adminAuthMiddleware, async (req, res) => {
-  const { rows } = await db.query(
-    "SELECT * FROM all_maintenance_log_items",
-    []
-  );
+  const { rows } = await db.query("SELECT * FROM all_maintenance_log_items");
   res.status(200).json(rows);
 });
 
@@ -79,11 +85,12 @@ router.post(
     const { admin_id } = req.tokenPayload;
 
     try {
-      await db.query("CALL add_maintenance_log($1, $2, $3::TEXT)", [
-        id,
-        admin_id,
-        description,
-      ]);
+      await db.query(
+        "CALL add_maintenance_log($1, $2, $3::TEXT)",
+        [id, admin_id, description],
+        req.tokenPayload.admin_id,
+        true
+      );
       res.status(200).json("Maintenance process created successfully.");
     } catch (err) {
       console.log(err);
@@ -107,7 +114,12 @@ router.post(
     const { id } = req.params;
     const { admin_id } = req.tokenPayload;
     try {
-      await db.query("CALL add_maintenance_history($1, $2)", [id, admin_id]);
+      await db.query(
+        "CALL add_maintenance_history($1, $2)",
+        [id, admin_id],
+        req.tokenPayload.admin_id,
+        true
+      );
       res.status(200).json("Maintenance history added successfully.");
     } catch (err) {
       console.log(err);
@@ -121,11 +133,22 @@ router.post(
 // Get the item
 router.get("/:id", authMiddleware, async (req, res) => {
   const { id } = req.params;
-  const { rows } = await db.query(
-    "SELECT * FROM item_search WHERE item_id = $1",
-    [id]
-  );
-  res.status(200).json(rows);
+  if (req.tokenPayload.admin) {
+    const { rows } = await db.query(
+      "SELECT * FROM item_search WHERE item_id = $1",
+      [id]
+    );
+    res.status(200).json(rows);
+  } else {
+    const { rows } = await db.query(
+      "SELECT * FROM item_search WHERE item_id = $1",
+      [id],
+      req.tokenPayload.user_id,
+      false,
+      true
+    );
+    res.status(200).json(rows);
+  }
 });
 
 // Add multimedia item
@@ -159,7 +182,9 @@ router.post("/multimedia", adminAuthMiddleware, async (req, res) => {
         genre_id,
         status,
         1,
-      ]
+      ],
+      req.tokenPayload.admin_id,
+      true
     );
     res.status(200).json({ item_id: rows[0].p_item_id });
   } catch {
@@ -205,7 +230,9 @@ router.post("/periodical", adminAuthMiddleware, async (req, res) => {
         living,
         status,
         1,
-      ]
+      ],
+      req.tokenPayload.admin_id,
+      true
     );
     res.status(200).json({ item_id: rows[0].p_item_id });
   } catch {
@@ -257,7 +284,9 @@ router.post("/nonperiodical", adminAuthMiddleware, async (req, res) => {
         edition,
         page_number,
         1,
-      ]
+      ],
+      req.tokenPayload.admin_id,
+      true
     );
     res.status(200).json({ item_id: rows[0].p_item_id });
   } catch {
@@ -272,7 +301,12 @@ router.post("/nonperiodical", adminAuthMiddleware, async (req, res) => {
 router.delete("/:id", adminAuthMiddleware, async (req, res) => {
   const { id } = req.params;
   try {
-    await db.query("CALL delete_item($1)", [id]);
+    await db.query(
+      "CALL delete_item($1)",
+      [id],
+      req.tokenPayload.admin_id,
+      true
+    );
     res.status(200).json("The item was successfully deleted.");
   } catch (err) {
     console.error(err);
@@ -294,8 +328,16 @@ router.post("/:id/rate", authMiddleware, async (req, res) => {
   const { id } = req.params;
   const { rate } = req.body;
   const { user_id } = req.tokenPayload;
+  if (user_id === undefined) {
+    return res.status(404).json({ message: "Invalid Token" });
+  }
   try {
-    await db.query("CALL add_rate ($1, $2, $3)", [id, user_id, rate]);
+    await db.query(
+      "CALL add_rate ($1, $2, $3)",
+      [id, user_id, rate],
+      user_id,
+      false
+    );
     res.status(200).json("Rate was added successfully.");
   } catch {
     (err) => {
@@ -311,8 +353,16 @@ router.patch("/:id/rate", authMiddleware, async (req, res) => {
   const { id } = req.params;
   const { rate } = req.body;
   const { user_id } = req.tokenPayload;
+  if (user_id === undefined) {
+    return res.status(404).json({ message: "Invalid Token" });
+  }
   try {
-    await db.query("CALL update_rate ($1, $2, $3)", [rate, user_id, id]);
+    await db.query(
+      "CALL update_rate ($1, $2, $3)",
+      [rate, user_id, id],
+      user_id,
+      false
+    );
     res.status(200).json("Rate was upgraded successfully.");
   } catch {
     (err) => {
@@ -350,7 +400,9 @@ router.patch("/:id/multimedia", adminAuthMiddleware, async (req, res) => {
         serie_name,
         genre_id,
         size,
-      ]
+      ],
+      tokenPayload.admin_id,
+      true
     );
     res.status(200).json("The item was successfully updated.");
   } catch {
@@ -393,7 +445,9 @@ router.patch("/:id/periodical", adminAuthMiddleware, async (req, res) => {
         seri_name,
         genre_id,
         living,
-      ]
+      ],
+      tokenPayload.admin_id,
+      true
     );
     res.status(200).json("The item was successfully updated.");
   } catch {
@@ -442,7 +496,9 @@ router.patch("/:id/nonperiodical", adminAuthMiddleware, async (req, res) => {
         isbn,
         edition,
         page_number,
-      ]
+      ],
+      tokenPayload.admin_id,
+      true
     );
     res.status(200).json("The item was successfully updated.");
   } catch {

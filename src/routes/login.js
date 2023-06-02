@@ -48,7 +48,9 @@ router.post("/", async (req, res) => {
         expirationDate.setDate(expirationDate.getDate() + 30);
         await db.query(
           "INSERT INTO refresh_tokens (token, expires_at) VALUES ($1, $2)",
-          [refreshToken, expirationDate]
+          [refreshToken, expirationDate],
+          adminInfo.admin_id,
+          true
         );
         res
           .status(200)
@@ -93,7 +95,9 @@ router.post("/", async (req, res) => {
           expirationDate.setDate(expirationDate.getDate() + 30);
           await db.query(
             "INSERT INTO refresh_tokens (token, expires_at) VALUES ($1, $2)",
-            [refreshToken, expirationDate]
+            [refreshToken, expirationDate],
+            userInfo.user_id,
+            false
           );
           res
             .status(200)

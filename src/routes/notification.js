@@ -32,7 +32,9 @@ router.patch("/", authMiddleware, async (req, res) => {
   try {
     await db.query(
       "UPDATE notifications SET is_read = $1::BOOLEAN WHERE id = $2::INTEGER AND user_id = $3::INTEGER",
-      [isRead, notification_id, user_id]
+      [isRead, notification_id, user_id],
+      user_id,
+      false
     );
     res.status(200).json(rows);
   } catch (err) {
@@ -54,7 +56,9 @@ router.delete("/", authMiddleware, async (req, res) => {
   try {
     await db.query(
       "DELETE FROM notifications WHERE id = $1::INTEGER AND user_id = $2::INTEGER",
-      [notification_id, user_id]
+      [notification_id, user_id],
+      user_id,
+      false
     );
     res.status(200).json(rows);
   } catch (err) {
@@ -72,7 +76,9 @@ router.post("/:id", adminAuthMiddleware, async (req, res) => {
   try {
     await db.query(
       "INSERT INTO notifications (message, user_id) VALUES ($1::TEXT, $2::INTEGER);",
-      [message, id]
+      [message, id],
+      req.tokenPayload.admin_id,
+      true
     );
     res.status(200).json({ message: "Notification added successfully." });
   } catch (err) {

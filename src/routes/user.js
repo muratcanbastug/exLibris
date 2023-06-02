@@ -57,7 +57,8 @@ router.get("/:id", adminAuthMiddleware, async (req, res) => {
 });
 
 // Add new user
-router.post("/", async (req, res) => {
+router.post("/", adminAuthMiddleware, async (req, res) => {
+  const { admin_id } = req.tokenPayload;
   const {
     first_name,
     last_name,
@@ -65,7 +66,6 @@ router.post("/", async (req, res) => {
     username,
     password,
     phone_number,
-    admin_id,
     id_number,
     banned,
     user_type_id,
@@ -99,7 +99,9 @@ router.post("/", async (req, res) => {
           banned,
           user_type_id,
           1,
-        ]
+        ],
+        admin_id,
+        true
       );
       res.status(200).json({ user_id: rows[0].p_user_id });
     }
@@ -130,7 +132,9 @@ router.patch("/", loggedAuthMiddleware, async (req, res) => {
         username,
         phone_number,
         user_type_id,
-      ]
+      ],
+      user_id,
+      false
     );
     res.status(200).json({ result: "User information updated successfully." });
   } catch (err) {
@@ -145,7 +149,12 @@ router.patch("/", loggedAuthMiddleware, async (req, res) => {
 router.delete("/:id", adminAuthMiddleware, async (req, res) => {
   const { id } = req.params;
   try {
-    await db.query("CALL delete_user_account($1::INTEGER)", [id]);
+    await db.query(
+      "CALL delete_user_account($1::INTEGER)",
+      [id],
+      req.tokenPayload.admin_id,
+      true
+    );
     res.status(200).json({ result: "User deleted successfully." });
   } catch (err) {
     console.error(err);
@@ -167,7 +176,9 @@ router.patch("/reset-password", loggedAuthMiddleware, async (req, res) => {
     const hashedPassword = await bcrypt.hash(new_password, 10);
     await db.query(
       "UPDATE user_account SET password = $1::VARCHAR WHERE user_id = $2::INTEGER",
-      [hashedPassword, user_id]
+      [hashedPassword, user_id],
+      user_id,
+      false
     );
     res.status(200).json({ result: "User password updated successfully." });
   } catch (err) {
@@ -198,7 +209,9 @@ router.post("/lists", authMiddleware, async (req, res) => {
     } else {
       await db.query(
         "INSERT INTO list (user_id, list_name) VALUES ($1::INTEGER, $2::VARCHAR)",
-        [user_id, list_name]
+        [user_id, list_name],
+        user_id,
+        false
       );
       res.status(200).json("List has been created.");
     }

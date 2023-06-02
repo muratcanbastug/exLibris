@@ -24,7 +24,12 @@ router.post("/", adminAuthMiddleware, async (req, res) => {
         error: `The shelf with the given shelf_code already exists`,
       });
     } else {
-      await db.query("CALL add_shelf($1::VARCHAR)", [shelf_code]);
+      await db.query(
+        "CALL add_shelf($1::VARCHAR)",
+        [shelf_code],
+        req.tokenPayload.admin_id,
+        true
+      );
       res
         .status(200)
         .json("The shelf with the given shelf_code was added successfully.");
@@ -43,7 +48,12 @@ router.post("/", adminAuthMiddleware, async (req, res) => {
 router.delete("/:id", adminAuthMiddleware, async (req, res) => {
   const { id } = req.params;
   try {
-    await db.query("CALL delete_shelf($1::INTEGER)", [id]);
+    await db.query(
+      "CALL delete_shelf($1::INTEGER)",
+      [id],
+      req.tokenPayload.admin_id,
+      true
+    );
     res.status(200).json("The delete was successful.");
   } catch {
     (err) => {
@@ -72,7 +82,9 @@ router.post("/:id", adminAuthMiddleware, async (req, res) => {
     } else {
       const { rows } = await db.query(
         "CALL add_branch($1::VARCHAR, $2::INTEGER, $3)",
-        [branch_code, id, 1]
+        [branch_code, id, 1],
+        req.tokenPayload.admin_id,
+        true
       );
       res.status(200).json({
         message:

@@ -34,10 +34,12 @@ router.post("/:id", adminAuthMiddleware, async (req, res) => {
   const { id } = req.params;
   const { description } = req.body;
   try {
-    await db.query("CALL add_return_history ($1, $2::VARCHAR)", [
-      id,
-      description,
-    ]);
+    await db.query(
+      "CALL add_return_history ($1, $2::VARCHAR)",
+      [id, description],
+      req.tokenPayload.admin_id,
+      true
+    );
     res.status(200).json("The return history was successfully added.");
   } catch {
     (err) => {
