@@ -14,6 +14,7 @@ const login = require("./login");
 const logout = require("./logout");
 const notifications = require("./notification");
 const logs = require("./log");
+const search = require("./search");
 
 module.exports = (app) => {
   app.use("/users", users);
@@ -32,4 +33,5 @@ module.exports = (app) => {
   app.use("/logout", logout);
   app.use("/notifications", notifications);
   app.use("/logs", logs);
+  app.use("/search", search);
 };
