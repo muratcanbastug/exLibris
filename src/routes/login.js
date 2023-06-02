@@ -67,6 +67,9 @@ router.post("/", async (req, res) => {
       if (existingRows.length > 0) {
         // User
         const userInfo = existingRows[0];
+        if (userInfo.banned) {
+          return res.status(401).json({ message: "The user has been banned" });
+        }
         const isPasswordMatched = await bcrypt.compare(
           password,
           userInfo.password
