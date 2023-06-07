@@ -30,7 +30,8 @@ module.exports = {
         );
         if (res.rows[0].count > 10) {
           await pool.query(
-            "DELETE FROM access_item_history WHERE user_id = $1 ORDER BY timestamp ASC LIMIT 1",
+            
+            "DELETE FROM access_item_history WHERE user_id = $1 AND timestamp = ( SELECT timestamp FROM access_item_history WHERE user_id = $1 ORDER BY timestamp ASC LIMIT 1)",
             [id]
           );
         }
@@ -47,7 +48,7 @@ module.exports = {
         );
         if (res.rows[0].count > 10) {
           await pool.query(
-            "DELETE FROM processing_history WHERE id = $1 AND admin = $2 ORDER BY timestamp ASC LIMIT 1",
+            "DELETE FROM processing_history WHERE id = $1 AND admin = $2 AND timestamp = ( SELECT timestamp FROM processing_history WHERE id = $1 AND admin = $2 ORDER BY timestamp ASC LIMIT 1 )",
             [id, admin]
           );
         }

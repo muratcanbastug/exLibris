@@ -46,12 +46,15 @@ router.post("/", async (req, res) => {
         const now = Date.now();
         const expirationDate = new Date(now);
         expirationDate.setDate(expirationDate.getDate() + 30);
+        
+        
         await db.query(
           "INSERT INTO refresh_tokens (token, expires_at, admin) VALUES ($1, $2, $3)",
           [refreshToken, expirationDate, true],
           adminInfo.admin_id,
           true
         );
+        
         res
           .status(200)
           .json({ accesToken: accesToken, refreshToken: refreshToken });
