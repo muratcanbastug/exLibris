@@ -407,7 +407,7 @@ router.patch("/:id/multimedia", adminAuthMiddleware, async (req, res) => {
         genre_id,
         size,
       ],
-      tokenPayload.admin_id,
+      req.tokenPayload.admin_id,
       true
     );
     res.status(200).json("The item was successfully updated.");
@@ -452,7 +452,7 @@ router.patch("/:id/periodical", adminAuthMiddleware, async (req, res) => {
         genre_id,
         living,
       ],
-      tokenPayload.admin_id,
+      req.tokenPayload.admin_id,
       true
     );
     res.status(200).json("The item was successfully updated.");
@@ -503,7 +503,7 @@ router.patch("/:id/nonperiodical", adminAuthMiddleware, async (req, res) => {
         edition,
         page_number,
       ],
-      tokenPayload.admin_id,
+      req.tokenPayload.admin_id,
       true
     );
     res.status(200).json("The item was successfully updated.");
