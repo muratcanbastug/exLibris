@@ -5,6 +5,12 @@ const {
   adminAuthMiddleware,
   authMiddleware,
 } = require("../Middleware/security/authMiddlware");
+const {
+  uploadPDF,
+  uploadAudio,
+  uploadVideo,
+} = require("../Middleware/upload/uploadMiddleware");
+const fs = require("fs");
 
 module.exports = router;
 
@@ -506,5 +512,168 @@ router.patch("/:id/nonperiodical", adminAuthMiddleware, async (req, res) => {
       console.error(err);
       res.status(500).json("An error occurred while updating item");
     };
+  }
+});
+
+// Storage for multimedia items content
+
+// Upload multimedia item content as PDF
+router.post(
+  "/multimedia/:id/upload/pdf",
+  adminAuthMiddleware,
+  uploadPDF.single("pdf"),
+  async (req, res) => {
+    if (req.fileValidationError) {
+      return res.status(500).json({ message: req.fileValidationError });
+    }
+    const id = req.params.id;
+    const { rows } = await db.query(
+      "SELECT path FROM multimedia_item WHERE item_id = $1",
+      [id]
+    );
+    const filePath = rows[0].path;
+
+    if (filePath) {
+      fs.access(filePath, fs.constants.F_OK, (err) => {
+        if (!err) {
+          fs.unlink(filePath, (err) => console.log(err));
+        }
+      });
+    }
+    const size = req.file.size / 1048576;
+    const path = req.file.path;
+    const mimetype = req.file.mimetype;
+    await db.query(
+      "UPDATE multimedia_item SET type = $1::VARCHAR, path = $2::VARCHAR, size = $3::INTEGER WHERE item_id = $4::INTEGER",
+      [mimetype, path, Math.round(size), id],
+      req.tokenPayload.admin_id,
+      true
+    );
+    res.status(200).json({ message: "Upload successfully." });
+  }
+);
+
+// Upload multimedia item content as video
+router.post(
+  "/multimedia/:id/upload/video",
+  uploadVideo.single("video"),
+  adminAuthMiddleware,
+  async (req, res) => {
+    if (req.fileValidationError) {
+      return res.status(500).json({ message: req.fileValidationError });
+    }
+    const id = req.params.id;
+
+    const { rows } = await db.query(
+      "SELECT path FROM multimedia_item WHERE item_id = $1",
+      [id]
+    );
+    const filePath = rows[0].path;
+
+    if (filePath) {
+      fs.access(filePath, fs.constants.F_OK, (err) => {
+        if (!err) {
+          fs.unlink(filePath, (err) => console.log(err));
+        }
+      });
+    }
+
+    const size = req.file.size / 1048576;
+    const path = req.file.path;
+    const mimetype = req.file.mimetype;
+    await db.query(
+      "UPDATE multimedia_item SET type = $1::VARCHAR, path = $2::VARCHAR, size = $3::INTEGER WHERE item_id = $4::INTEGER",
+      [mimetype, path, Math.round(size), id],
+      req.tokenPayload.admin_id,
+      true
+    );
+    res.status(200).json({ message: "Upload successfully." });
+  }
+);
+
+// Upload multimedia item content as audio
+router.post(
+  "/multimedia/:id/upload/audio",
+  uploadAudio.single("audio"),
+  adminAuthMiddleware,
+  async (req, res) => {
+    if (req.fileValidationError) {
+      return res.status(500).json({ message: req.fileValidationError });
+    }
+    const id = req.params.id;
+
+    const { rows } = await db.query(
+      "SELECT path FROM multimedia_item WHERE item_id = $1",
+      [id]
+    );
+    const filePath = rows[0].path;
+
+    if (filePath) {
+      fs.access(filePath, fs.constants.F_OK, (err) => {
+        if (!err) {
+          fs.unlink(filePath, (err) => console.log(err));
+        }
+      });
+    }
+
+    const size = req.file.size / 1048576;
+    const path = req.file.path;
+    const mimetype = req.file.mimetype;
+    await db.query(
+      "UPDATE multimedia_item SET type = $1::VARCHAR, path = $2::VARCHAR, size = $3::INTEGER WHERE item_id = $4::INTEGER",
+      [mimetype, path, Math.round(size), id],
+      req.tokenPayload.admin_id,
+      true
+    );
+    res.status(200).json({ message: "Upload successfully." });
+  }
+);
+
+// Delete multimedia item content
+router.delete(
+  "/multimedia/:id/delete/content",
+  adminAuthMiddleware,
+  async (req, res) => {
+    const id = req.params.id;
+    const { rows } = await db.query(
+      "SELECT path FROM multimedia_item WHERE item_id = $1",
+      [id]
+    );
+    const filePath = rows[0].path;
+
+    if (filePath) {
+      fs.access(filePath, fs.constants.F_OK, (err) => {
+        if (!err) {
+          fs.unlink(filePath, (err) => console.log(err));
+        }
+      });
+      await db.query(
+        "UPDATE multimedia_item SET type = $1, path = $2, size = $3 WHERE item_id = $4::INTEGER",
+        [null, null, null, id],
+        req.tokenPayload.admin_id,
+        true
+      );
+    }
+
+    res.status(200).json({ message: "The content was deleted successfully." });
+  }
+);
+
+// Get multimedia item content
+router.get("/multimedia/:id/content", adminAuthMiddleware, async (req, res) => {
+  const id = req.params.id;
+  const { rows } = await db.query(
+    "SELECT path, type FROM multimedia_item WHERE item_id = $1",
+    [id]
+  );
+  const filePath = rows[0].path;
+  const type = rows[0].type;
+  if (filePath) {
+    fs.readFile(filePath, (err, file) => {
+      res.setHeader("Content-Type", type);
+      res.send(file);
+    });
+  } else {
+    res.status(404).json({ message: "The content was not found." });
   }
 });
