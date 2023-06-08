@@ -1,7 +1,7 @@
 const Router = require("express-promise-router");
 const db = require("../db");
 const router = new Router();
-const { adminAuthMiddleware } = require("../security/authMiddlware");
+const { adminAuthMiddleware } = require("../Middleware/security/authMiddlware");
 
 module.exports = router;
 

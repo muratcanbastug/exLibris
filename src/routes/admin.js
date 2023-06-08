@@ -5,7 +5,7 @@ const bcrypt = require("bcrypt");
 const {
   adminAuthMiddleware,
   adminAndLoggedAuthMiddleware,
-} = require("../security/authMiddlware");
+} = require("../Middleware/security/authMiddlware");
 
 module.exports = router;
 

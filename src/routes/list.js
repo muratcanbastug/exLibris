@@ -2,7 +2,7 @@ const Router = require("express-promise-router");
 const db = require("../db");
 const router = new Router();
 module.exports = router;
-const { authMiddleware } = require("../security/authMiddlware");
+const { authMiddleware } = require("../Middleware/security/authMiddlware");
 
 // Get list items
 router.get("/:id", authMiddleware, async (req, res) => {

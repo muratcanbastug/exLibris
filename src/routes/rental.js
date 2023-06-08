@@ -5,7 +5,7 @@ module.exports = router;
 const {
   adminAuthMiddleware,
   authMiddleware,
-} = require("../security/authMiddlware");
+} = require("../Middleware/security/authMiddlware");
 
 // Get all rentals at that time
 router.get("/", adminAuthMiddleware, async (req, res) => {

@@ -7,8 +7,7 @@ const {
   adminAuthMiddleware,
   authMiddleware,
   loggedAuthMiddleware,
-} = require("../security/authMiddlware");
-
+} = require("../Middleware/security/authMiddlware");
 module.exports = router;
 
 // Get user information for user

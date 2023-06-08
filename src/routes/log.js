@@ -2,7 +2,7 @@ const Router = require("express-promise-router");
 const db = require("../db");
 const router = new Router();
 module.exports = router;
-const { adminAuthMiddleware } = require("../security/authMiddlware");
+const { adminAuthMiddleware } = require("../Middleware/security/authMiddlware");
 
 // Get the user logs
 router.get("/:id/:admin", adminAuthMiddleware, async (req, res) => {

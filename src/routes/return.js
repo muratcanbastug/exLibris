@@ -4,7 +4,7 @@ const router = new Router();
 const {
   authMiddleware,
   adminAuthMiddleware,
-} = require("../security/authMiddlware");
+} = require("../Middleware/security/authMiddlware");
 
 module.exports = router;
 
