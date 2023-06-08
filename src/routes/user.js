@@ -8,6 +8,8 @@ const {
   authMiddleware,
   loggedAuthMiddleware,
 } = require("../Middleware/security/authMiddlware");
+const { uploadPP } = require("../Middleware/upload/uploadMiddleware");
+const fs = require("fs");
 module.exports = router;
 
 // Get user information for user
@@ -221,5 +223,93 @@ router.post("/lists", authMiddleware, async (req, res) => {
         .status(500)
         .json({ error: "An error occurred while edding the list." });
     };
+  }
+});
+
+// Storage for user profile photo
+
+// Upload profile photo
+router.post("/pp", authMiddleware, uploadPP.single("pp"), async (req, res) => {
+  const user_id = req.tokenPayload.user_id;
+  if (user_id === undefined) {
+    return res.status(403).json({ message: "Invalid token." });
+  }
+
+  if (req.fileValidationError) {
+    return res.status(500).json({ message: req.fileValidationError });
+  }
+
+  const { rows } = await db.query(
+    "SELECT photo FROM user_account WHERE user_id = $1",
+    [user_id]
+  );
+  const filePath = rows[0].path;
+
+  if (filePath) {
+    fs.access(filePath, fs.constants.F_OK, (err) => {
+      if (!err) {
+        fs.unlink(filePath, (err) => console.log(err));
+      }
+    });
+  }
+  const path = req.file.path;
+  const mimetype = req.file.mimetype;
+  await db.query(
+    "UPDATE user_account SET pp = $1::VARCHAR, photo_type = $2::VARCHAR WHERE user_id = $3::INTEGER",
+    [path, mimetype, user_id],
+    user_id,
+    false
+  );
+  res.status(200).json({ message: "Upload successfully." });
+});
+
+// Delete pp
+router.delete("/pp", authMiddleware, async (req, res) => {
+  const user_id = req.tokenPayload.user_id;
+  if (user_id === undefined) {
+    return res.status(403).json({ message: "Invalid token." });
+  }
+  const { rows } = await db.query(
+    "SELECT photo FROM user_account WHERE user_id = $1",
+    [id]
+  );
+  const filePath = rows[0].path;
+
+  if (filePath) {
+    fs.access(filePath, fs.constants.F_OK, (err) => {
+      if (!err) {
+        fs.unlink(filePath, (err) => console.log(err));
+      }
+    });
+    await db.query(
+      "UPDATE user_account SET photo = $1, photo_type = $2 WHERE user_id = $3::INTEGER",
+      [null, null, user_id],
+      req.tokenPayload.user_id,
+      false
+    );
+  }
+
+  res.status(200).json({ message: "The photo was deleted successfully." });
+});
+
+// Get pp
+router.get("/pp", authMiddleware, async (req, res) => {
+  const user_id = req.tokenPayload.user_id;
+  if (user_id === undefined) {
+    return res.status(403).json({ message: "Invalid token." });
+  }
+  const { rows } = await db.query(
+    "SELECT photo, photo_type FROM user_account WHERE user_id = $1",
+    [id]
+  );
+  const filePath = rows[0].path;
+  const photo_type = rows[0].photo_type;
+  if (filePath) {
+    fs.readFile(filePath, (err, file) => {
+      res.setHeader("Content-Type", photo_type);
+      res.send(file);
+    });
+  } else {
+    res.status(404).json({ message: "The content was not found." });
   }
 });
