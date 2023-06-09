@@ -75,8 +75,8 @@ router.post("/", adminAuthMiddleware, async (req, res) => {
   try {
     // Check if user with the given id_number already exists
     const { rows: existingRows } = await db.query(
-      "SELECT user_id FROM user_account WHERE id_number = $1",
-      [id_number]
+      "SELECT user_id FROM user_account WHERE id_number = $1 OR email = $2",
+      [id_number, email]
     );
 
     if (existingRows.length > 0) {
