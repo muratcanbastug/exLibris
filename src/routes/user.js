@@ -10,6 +10,7 @@ const {
 } = require("../Middleware/security/authMiddlware");
 const { uploadPP } = require("../Middleware/upload/uploadMiddleware");
 const fs = require("fs");
+const { sendEmail } = require("../Middleware/mail/sendMail");
 module.exports = router;
 
 // Get user information for user
@@ -166,8 +167,8 @@ router.delete("/:id", adminAuthMiddleware, async (req, res) => {
   res.status(409).json("User has book.");
 });
 
-// Reset user password
-router.patch("/reset-password", loggedAuthMiddleware, async (req, res) => {
+// Update user password
+router.patch("/update-password", loggedAuthMiddleware, async (req, res) => {
   const { user_id } = req.tokenPayload;
   const { new_password } = req.body;
   if (user_id === undefined) {
@@ -223,6 +224,103 @@ router.post("/lists", authMiddleware, async (req, res) => {
         .status(500)
         .json({ error: "An error occurred while edding the list." });
     };
+  }
+});
+
+// Reset Password
+
+// Request password reset
+router.post("/request-password-reset", async (req, res) => {
+  try {
+    const { email } = req.body;
+    const { rows } = await db.query(
+      "SELECT * FROM user_account WHERE email = $1",
+      [email]
+    );
+    if (rows.length > 0) {
+      const user = rows[0];
+      await db.query("DELETE FROM otpcode WHERE user_id = $1", [user.user_id]);
+      const otp = `${Math.floor(1000 + Math.random() * 9000)}`;
+      const expiresTime = 3600000;
+      const expiresAt = new Date(Date.now() + expiresTime);
+
+      const hashedOtp = await bcrypt.hash(otp, 10);
+      await db.query(
+        "INSERT INTO otpCode (user_id, otp, expiresAt) VALUES ($1::INTEGER, $2::VARCHAR, $3::TIMESTAMP)",
+        [user.user_id, hashedOtp, expiresAt]
+      );
+
+      const subject = "ExLibris Resend Password Reset";
+      const text = `<p>Hi <b>${user.first_name}</b>! Enter <b>${otp}</b> in the app to reset your password.</p>
+      <p>This code <b>expires in 1 hour</b>.</p>
+      
+      <p>If you did not request this, please ignore this email.</p>`;
+      sendEmail(email, text, subject, res);
+      res.status(200).json({
+        message: "OTP Code was sent successfully to given email.",
+      });
+    } else {
+      res
+        .status(403)
+        .json({ message: "There is no user with that email address." });
+    }
+  } catch (err) {
+    console.error(err);
+    res
+      .status(500)
+      .json({ message: "An error occurred while sending otp code." });
+  }
+});
+
+// Reset Password
+router.post("/reset-password", async (req, res) => {
+  const { email, otpCode, newPassword } = req.body;
+  try {
+    const { rows } = await db.query(
+      "SELECT user_id FROM user_account WHERE email = $1",
+      [email]
+    );
+
+    if (rows.length > 0) {
+      const user_id = rows[0].user_id;
+      let otpResult = await db.query(
+        "SELECT * FROM otpcode WHERE user_id = $1",
+        [user_id]
+      );
+      otpResult = otpResult.rows;
+      if (otpResult.length > 0) {
+        const { otp, expiresat } = otpResult[0];
+        const isOTPMatched = await bcrypt.compare(otpCode.toString(), otp);
+        if (isOTPMatched) {
+          if (expiresat > Date.now()) {
+            const hashedPassword = await bcrypt.hash(newPassword, 10);
+            await db.query(
+              "UPDATE user_account SET password = $1::VARCHAR WHERE user_id = $2::INTEGER",
+              [hashedPassword, user_id],
+              user_id,
+              false
+            );
+            await db.query("DELETE FROM otpcode WHERE user_id = $1", [user_id]);
+            res.status(200).json({ message: "Password changed successfully." });
+          } else {
+            res
+              .status(401)
+              .json({ message: "Code has expired. Please try again." });
+          }
+        } else {
+          res.status(401).json({ message: "Invalid code. Check your inbox." });
+        }
+      } else {
+        res.status(401).json({ message: "Password reset request not found." });
+      }
+    } else {
+      res.status(403).json({ message: "There is no user with that email." });
+    }
+  } catch (err) {
+    console.log(err);
+    res
+      .status(500)
+      .json({ message: "An error occurred while reseting password." });
   }
 });
 
