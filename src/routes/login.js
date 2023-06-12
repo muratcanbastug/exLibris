@@ -57,7 +57,7 @@ router.post("/", async (req, res) => {
         
         res
           .status(200)
-          .json({ accesToken: accesToken, refreshToken: refreshToken });
+          .json({ accesToken: accesToken, refreshToken: refreshToken, isAdmin: true  });
       } else {
         res.status(401).json({ message: "Invalid Access Token" });
       }
@@ -100,14 +100,14 @@ router.post("/", async (req, res) => {
           const expirationDate = new Date(now);
           expirationDate.setDate(expirationDate.getDate() + 30);
           await db.query(
-            "INSERT INTO refresh_tokens (token, expires_at) VALUES ($1, $2, $3)",
+            "INSERT INTO refresh_tokens (token, expires_at, admin) VALUES ($1, $2, $3)",
             [refreshToken, expirationDate, false],
             userInfo.user_id,
             false
           );
           res
             .status(200)
-            .json({ accesToken: accesToken, refreshToken: refreshToken });
+            .json({ accesToken: accesToken, refreshToken: refreshToken, isAdmin: false });
         } else {
           res.status(401).json({ message: "Invalid Access Token" });
         }
