@@ -26,6 +26,8 @@ router.get("/user", authMiddleware, async (req, res) => {
   res.status(200).json(rows[0]);
 });
 
+
+
 // Get all users information
 router.get("/all", adminAuthMiddleware, async (req, res) => {
   const { rows } = await db.query(
@@ -47,6 +49,30 @@ router.get("/lists", authMiddleware, async (req, res) => {
   );
   res.status(200).json(rows);
 });
+
+// Get pp
+router.get("/pp", authMiddleware, async (req, res) => {
+  const user_id = req.tokenPayload.user_id;
+  if (user_id === undefined) {
+    return res.status(403).json({ message: "Invalid token." });
+  }
+  const { rows } = await db.query(
+    "SELECT photo, photo_type FROM user_account WHERE user_id = $1",
+    [user_id]
+  );
+  console.log(rows[0]);
+  const filePath = rows[0].photo;
+  const photo_type = rows[0].photo_type;
+  if (filePath) {
+    fs.readFile(filePath, (err, file) => {
+      res.setHeader("Content-Type", photo_type);
+      res.send(file);
+    });
+  } else {
+    res.status(404).json({ message: "The content was not found." });
+  }
+});
+
 
 // Get user information for admin
 router.get("/:id", adminAuthMiddleware, async (req, res) => {
@@ -353,7 +379,7 @@ router.post("/pp", authMiddleware, uploadPP.single("pp"), async (req, res) => {
   const path = req.file.path;
   const mimetype = req.file.mimetype;
   await db.query(
-    "UPDATE user_account SET pp = $1::VARCHAR, photo_type = $2::VARCHAR WHERE user_id = $3::INTEGER",
+    "UPDATE user_account SET photo = $1::VARCHAR, photo_type = $2::VARCHAR WHERE user_id = $3::INTEGER",
     [path, mimetype, user_id],
     user_id,
     false
@@ -390,24 +416,3 @@ router.delete("/pp", authMiddleware, async (req, res) => {
   res.status(200).json({ message: "The photo was deleted successfully." });
 });
 
-// Get pp
-router.get("/pp", authMiddleware, async (req, res) => {
-  const user_id = req.tokenPayload.user_id;
-  if (user_id === undefined) {
-    return res.status(403).json({ message: "Invalid token." });
-  }
-  const { rows } = await db.query(
-    "SELECT photo, photo_type FROM user_account WHERE user_id = $1",
-    [id]
-  );
-  const filePath = rows[0].path;
-  const photo_type = rows[0].photo_type;
-  if (filePath) {
-    fs.readFile(filePath, (err, file) => {
-      res.setHeader("Content-Type", photo_type);
-      res.send(file);
-    });
-  } else {
-    res.status(404).json({ message: "The content was not found." });
-  }
-});
