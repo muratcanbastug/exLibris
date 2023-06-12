@@ -13,7 +13,7 @@ router.post("/", async (req, res) => {
     const { refreshToken } = req.body;
     jwt.verify(
       refreshToken,
-      process.env.REFRES_TOKEN_SECRET,
+      process.env.REFRESH_TOKEN_SECRET,
       async (err, payload) => {
         if (err) {
           console.log(err);
