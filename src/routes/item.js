@@ -14,6 +14,12 @@ const fs = require("fs");
 
 module.exports = router;
 
+// Get all statistics
+router.get("/statistics", adminAuthMiddleware, async (req, res) => {
+  const { rows } = await db.query("SELECT * FROM statistics");
+  res.status(200).json(rows);
+});
+
 // Get all items
 router.get("/", authMiddleware, async (req, res) => {
   const { rows } = await db.query("SELECT * FROM item_search");
