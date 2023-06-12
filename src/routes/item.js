@@ -20,6 +20,18 @@ router.get("/statistics", adminAuthMiddleware, async (req, res) => {
   res.status(200).json(rows);
 });
 
+// Get all multimedia items
+router.get("/all_multimedia/", authMiddleware, async (req, res) => {
+  const { rows } = await db.query("SELECT * FROM all_multimedia");
+  res.status(200).json(rows);
+});
+
+// Get every items for real
+router.get("/all_items/", authMiddleware, async (req, res) => {
+  const { rows } = await db.query("SELECT * FROM all_items");
+  res.status(200).json(rows);
+});
+
 // Get all items
 router.get("/", authMiddleware, async (req, res) => {
   const { rows } = await db.query("SELECT * FROM item_search");
@@ -154,6 +166,27 @@ router.get("/:id", authMiddleware, async (req, res) => {
   } else {
     const { rows } = await db.query(
       "SELECT * FROM item_search WHERE item_id = $1",
+      [id],
+      req.tokenPayload.user_id,
+      false,
+      true
+    );
+    res.status(200).json(rows);
+  }
+});
+
+// Get the item from item
+router.get("/get/:id", authMiddleware, async (req, res) => {
+  const { id } = req.params;
+  if (req.tokenPayload.admin) {
+    const { rows } = await db.query(
+      "SELECT * FROM all_items WHERE item_id = $1",
+      [id]
+    );
+    res.status(200).json(rows);
+  } else {
+    const { rows } = await db.query(
+      "SELECT * FROM all_items WHERE item_id = $1",
       [id],
       req.tokenPayload.user_id,
       false,
