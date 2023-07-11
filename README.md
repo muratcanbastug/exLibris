@@ -24,7 +24,7 @@ resources by implementing access controls, including user authentication, permis
 and access restrictions.
 
 ### ER DIAGRAM
-![ER diagram V3](https://user-images.githubusercontent.com/51405534/236638224-fc78542a-32e4-4a20-b514-0afbeac8c38b.jpg)
+![ER diagram V5](https://github.com/muratcanbastug/exLibris/assets/51405534/f7ea8f22-ff94-4445-a3b1-715f7899b730)
 
 ### USAGE
 
@@ -44,6 +44,14 @@ PGPASSWORD = {database_password}
 PGPORT = {database_port}
 
 PORT = {server_port}
+
+ACCES_TOKEN_SECRET = {authentication_access_token}
+REFRESH_TOKEN_SECRET = {authentication_refresh_token}
+
+AUTH_EMAIL = {authentication_email}
+AUTH_CLIENT_ID = {authentication_client_id}
+AUTH_CLIENT_SECRET = {authentication_client_secret}
+AUTH_REFRESH_TOKEN = {authentication_refresh_token}
 ```
 
 For testing the APIs in the backend, you can utilize the `exLibris.postman_collection.json` file. This file provides a collection of requests in the Postman format, which you can import into the **Postman** program. Using this collection, you can perform tests and interact with the APIs effectively.
